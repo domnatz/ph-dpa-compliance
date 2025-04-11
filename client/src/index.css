@@ -1,0 +1,289 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom colors for data privacy theme - expanded palette */
+:root {
+  /* Core colors */
+  --privacy-blue: #0056b3;
+  --privacy-blue-light: #3a7abd;
+  --privacy-purple: #5e35b1;
+  --privacy-purple-light: #7e57c2;
+  --privacy-green: #2e7d32;
+  --privacy-green-light: #4caf50;
+  --privacy-red: #c62828;
+  --privacy-yellow: #f9a825;
+  --privacy-bg-light: #f0f5ff;
+  
+  /* Additional privacy-themed colors */
+  --privacy-teal: #00796b;
+  --privacy-teal-light: #26a69a;
+  --privacy-indigo: #303f9f;
+  --privacy-indigo-light: #5c6bc0;
+  --privacy-orange: #ef6c00;
+  --privacy-orange-light: #ff9800;
+  
+  /* Gradient combinations */
+  --gradient-compliance: linear-gradient(135deg, var(--privacy-blue) 0%, var(--privacy-teal) 100%);
+  --gradient-security: linear-gradient(135deg, var(--privacy-indigo) 0%, var(--privacy-purple) 100%);
+  --gradient-warning: linear-gradient(135deg, var(--privacy-orange) 0%, var(--privacy-yellow) 100%);
+}
+
+/* Base styles */
+@layer base {
+  body {
+    @apply text-gray-900 bg-white;
+    background-image: linear-gradient(to bottom right, var(--privacy-bg-light), white);
+    background-attachment: fixed;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900;
+  }
+  
+  h1 {
+    @apply text-3xl font-bold mb-4;
+    color: var(--privacy-blue);
+  }
+  
+  h2 {
+    @apply text-2xl font-bold mb-3;
+    color: var(--privacy-purple);
+  }
+  
+  h3 {
+    @apply text-xl font-bold mb-2;
+    color: var(--privacy-indigo);
+  }
+  
+  p, span, div, li, a {
+    @apply text-gray-800;
+  }
+}
+
+/* Button styling for data privacy theme */
+@layer components {
+  .btn-primary {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background-color: var(--privacy-blue);
+    color: white !important;
+    border: 2px solid var(--privacy-blue);
+    box-shadow: 0 2px 5px rgba(0, 86, 179, 0.3);
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--privacy-blue-light);
+    border-color: var(--privacy-blue-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 86, 179, 0.4);
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background-color: var(--privacy-purple);
+    color: white !important;
+    border: 2px solid var(--privacy-purple);
+    box-shadow: 0 2px 5px rgba(94, 53, 177, 0.3);
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--privacy-purple-light);
+    border-color: var(--privacy-purple-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(94, 53, 177, 0.4);
+  }
+  
+  .btn-success {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background-color: var(--privacy-green);
+    color: white !important;
+    border: 2px solid var(--privacy-green);
+    box-shadow: 0 2px 5px rgba(46, 125, 50, 0.3);
+  }
+  
+  .btn-success:hover {
+    background-color: var(--privacy-green-light);
+    border-color: var(--privacy-green-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(46, 125, 50, 0.4);
+  }
+  
+  .btn-outline {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background-color: transparent;
+    border: 2px solid var(--privacy-blue);
+    color: var(--privacy-blue) !important;
+  }
+  
+  .btn-outline:hover {
+    background-color: var(--privacy-blue);
+    color: white !important;
+    transform: translateY(-2px);
+  }
+  
+  /* New Data Privacy Act themed buttons */
+  .btn-compliance {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background: var(--gradient-compliance);
+    color: white !important;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 121, 107, 0.3);
+  }
+  
+  .btn-compliance:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 121, 107, 0.4);
+    filter: brightness(110%);
+  }
+  
+  .btn-security {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background: var(--gradient-security);
+    color: white !important;
+    border: none;
+    box-shadow: 0 2px 5px rgba(48, 63, 159, 0.3);
+  }
+  
+  .btn-security:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(48, 63, 159, 0.4);
+    filter: brightness(110%);
+  }
+  
+  .btn-warning {
+    @apply px-6 py-2 rounded-md font-medium transition-all duration-200;
+    background: var(--gradient-warning);
+    color: white !important;
+    border: none;
+    box-shadow: 0 2px 5px rgba(239, 108, 0, 0.3);
+  }
+  
+  .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 108, 0, 0.4);
+    filter: brightness(110%);
+  }
+}
+
+/* Privacy-themed elements */
+@layer utilities {
+  .privacy-card {
+    @apply rounded-lg p-6 shadow-md;
+    border-top: 4px solid var(--privacy-blue);
+    background-color: white;
+  }
+  
+  /* New privacy card variants */
+  .privacy-card-compliance {
+    @apply rounded-lg p-6 shadow-md;
+    border-left: 4px solid var(--privacy-teal);
+    background-color: white;
+  }
+  
+  .privacy-card-security {
+    @apply rounded-lg p-6 shadow-md;
+    border-left: 4px solid var(--privacy-indigo);
+    background-color: white;
+  }
+  
+  .privacy-card-warning {
+    @apply rounded-lg p-6 shadow-md;
+    border-left: 4px solid var(--privacy-orange);
+    background-color: white;
+  }
+  
+  .security-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    background-color: var(--privacy-green-light);
+    color: white !important;
+  }
+  
+  .alert-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    background-color: var(--privacy-red);
+    color: white !important;
+  }
+  
+  .warning-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    background-color: var(--privacy-yellow);
+    color: white !important;
+  }
+  
+  /* New compliance-specific badges */
+  .compliance-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    background-color: var(--privacy-teal);
+    color: white !important;
+  }
+  
+  .dpa-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm;
+    background-color: var(--privacy-indigo);
+    color: white !important;
+  }
+  
+  /* Section styling */
+  .privacy-section {
+    background: linear-gradient(135deg, var(--privacy-blue-light) 0%, var(--privacy-purple) 100%);
+    @apply py-12 rounded-lg my-6;
+  }
+  
+  .privacy-section * {
+    color: white !important;
+  }
+  
+  /* New section variants */
+  .compliance-section {
+    background: var(--gradient-compliance);
+    @apply py-12 rounded-lg my-6;
+  }
+  
+  .compliance-section * {
+    color: white !important;
+  }
+  
+  .security-section {
+    background: var(--gradient-security);
+    @apply py-12 rounded-lg my-6;
+  }
+  
+  .security-section * {
+    color: white !important;
+  }
+  
+  /* Data protection highlight box */
+  .data-protection-box {
+    @apply p-4 rounded-md border border-opacity-30 my-4;
+    background-color: rgba(0, 86, 179, 0.05);
+    border-color: var(--privacy-blue);
+  }
+  
+  /* Form styling for privacy-focused forms */
+  .privacy-form-control {
+    @apply rounded-md border border-gray-300 px-4 py-2 w-full transition-all;
+    border-left: 3px solid var(--privacy-blue);
+  }
+  
+  .privacy-form-control:focus {
+    @apply outline-none border-gray-300;
+    border-left: 3px solid var(--privacy-purple);
+    box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.1);
+  }
+}
+/* More aggressive text color fix - keep this for compatibility */
+@layer utilities {
+    .force-text-visible {
+      @apply !text-gray-900;
+    }
+    
+    /* Target specific components that might be using custom colors */
+    input, textarea, select {
+      @apply !text-gray-800;
+    }
+    
+    /* Override white text except for our new buttons/components and navigation elements */
+    [class*="text-white"]:not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.security-badge):not(.alert-badge):not(.warning-badge):not(.privacy-section *):not(.compliance-badge):not(.dpa-badge):not(.btn-compliance):not(.btn-security):not(.btn-warning):not(.compliance-section *):not(.security-section *):not(footer *):not(nav *) {
+      @apply !text-gray-900;
+    }
+}
