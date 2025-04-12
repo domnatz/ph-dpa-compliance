@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
