@@ -13,10 +13,10 @@ module.exports = async (req, res) => {
   
   console.log('Bypass login used for:', req.body?.email);
 
-  // Generate a proper JWT token
+  // Generate a proper JWT token with a bypass flag
   const userId = 'bypass-' + (req.body?.email || 'user').replace(/[^a-z0-9]/gi, '');
   const token = jwt.sign(
-    { id: userId },
+    { id: userId, isBypassUser: true }, // Add `isBypassUser` flag
     process.env.JWT_SECRET || 'your-default-secret-key',
     { expiresIn: '30d' }
   );

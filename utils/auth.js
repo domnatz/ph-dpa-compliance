@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/userModel');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
@@ -12,34 +13,46 @@ exports.generateToken = (userId) => {
 };
 
 // Verify token and return user
-exports.verifyToken = async (token) => {
+exports.verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'Authorization header missing or invalid' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
   try {
-    if (!token) {
-      throw new Error('No token provided');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-default-secret-key');
+
+    // Check if the user is a bypass user
+    if (decoded.isBypassUser) {
+      console.log('Bypass user detected:', decoded.id);
+      req.user = {
+        id: decoded.id,
+        name: decoded.id.replace('bypass-', ''),
+        email: `${decoded.id.replace('bypass-', '')}@example.com`,
+        role: 'user',
+        isBypassUser: true
+      };
+      return next();
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Check if token is expired
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp && decoded.exp < currentTime) {
-      throw new Error('Token expired');
+    // For regular users, fetch the user from the database
+    if (!mongoose.Types.ObjectId.isValid(decoded.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
     }
-    
+
     const user = await User.findById(decoded.id);
-
     if (!user) {
-      throw new Error('User not found');
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    return user;
-  } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      throw new Error('Invalid token');
-    } else if (error.name === 'TokenExpiredError') {
-      throw new Error('Token expired');
-    }
-    throw new Error(error.message || 'Not authorized');
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('Token verification error:', err);
+    return res.status(401).json({ success: false, error: 'Invalid token' });
   }
 };
 

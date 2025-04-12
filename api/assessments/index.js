@@ -24,31 +24,31 @@ module.exports = async (req, res) => {
       }
     });
     
+    // Connect to the database
     await connectDB();
     
-    // Get token from header
-    let token;
+    // Verify token and get user
+    const user = await verifyToken(req, res, () => {});
     
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-    
-    if (!token) {
-      return res.status(401).json({
+    // Restrict access for bypass users
+    if (user.isBypassUser) {
+      console.log('Bypass user cannot access assessments:', user.id);
+      return res.status(403).json({
         success: false,
-        error: 'No token provided, authorization denied'
+        error: 'Bypass users are not allowed to access assessments'
       });
     }
     
-    // Verify token
-    const user = await verifyToken(token);
-    
-    // GET method - get latest assessment
+    // Handle GET method - get the latest assessment
     if (req.method === 'GET') {
       const assessment = await Assessment.findOne({ user: user._id }).sort('-completedAt');
+      
+      if (!assessment) {
+        return res.status(404).json({
+          success: false,
+          error: 'No assessments found for this user'
+        });
+      }
       
       return res.status(200).json({
         success: true,
@@ -56,21 +56,20 @@ module.exports = async (req, res) => {
       });
     }
     
-    // POST method - create new assessment
+    // Handle POST method - create a new assessment
     if (req.method === 'POST') {
       const { answers } = req.body;
       
       if (!answers || !Array.isArray(answers)) {
         return res.status(400).json({
           success: false,
-          error: 'Please provide answers array'
+          error: 'Please provide a valid answers array'
         });
       }
       
       // Calculate score (simplified version)
       let score = 0;
       answers.forEach(answer => {
-        // Add points for "Yes" answers
         if (answer.answer === 'Yes') {
           score += 20;
         } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
@@ -81,7 +80,7 @@ module.exports = async (req, res) => {
       // Cap score at 100
       score = Math.min(score, 100);
       
-      // Create assessment
+      // Create a new assessment
       const assessment = await Assessment.create({
         user: user._id,
         answers,
@@ -94,7 +93,7 @@ module.exports = async (req, res) => {
       });
     }
     
-    // If not GET or POST
+    // If the method is not GET or POST
     return res.status(405).json({ 
       success: false, 
       error: 'Method not allowed',
@@ -105,7 +104,7 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('Assessment API error:', err.message, err.stack);
     
-    // Proper error handling for different types of errors
+    // Handle specific errors
     if (err.message === 'Invalid token' || err.message === 'User not found') {
       return res.status(401).json({
         success: false,
@@ -113,6 +112,7 @@ module.exports = async (req, res) => {
       });
     }
     
+    // Handle server errors
     return res.status(500).json({
       success: false,
       error: 'Server error',
