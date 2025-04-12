@@ -52,17 +52,24 @@ const AuthState = props => {
   const register = async formData => {
     try {
       const res = await api.post('/users/register', formData);
-
+  
       dispatch({
         type: 'REGISTER_SUCCESS',
         payload: res.data
       });
-
+  
       loadUser();
     } catch (err) {
+      console.error('Register error:', err.response?.data || err.message);
+      
+      // Same fix here - use a string error message
+      const errorMessage = err.response?.data?.error || 
+                           err.message || 
+                           'Registration failed';
+      
       dispatch({
         type: 'REGISTER_FAIL',
-        payload: err.response?.data?.error || 'Registration failed'
+        payload: errorMessage  // Send string, not object
       });
     }
   };
@@ -92,9 +99,15 @@ const AuthState = props => {
         }, 100);
       } catch (err) {
         console.error('Login error:', err.response?.data || err.message);
+        
+        // This is the key fix - use a proper string for the payload, not an object
+        const errorMessage = err.response?.data?.error || 
+                             err.message || 
+                             'Login failed';
+        
         dispatch({
           type: 'LOGIN_FAIL',
-          payload: err.response?.data?.error || 'Login failed'
+          payload: errorMessage  // Send string, not object
         });
       }
     };

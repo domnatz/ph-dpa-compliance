@@ -14,6 +14,17 @@ module.exports = async (req, res) => {
   }
   
   try {
+    console.log('Login attempt, body:', req.body);
+    
+    // Check if request body exists and is not empty
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.error('Empty request body');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No request body provided' 
+      });
+    }
+    
     // Connect to database
     await connectDB();
     
@@ -32,8 +43,18 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    // Check for user (with try/catch)
+    let user;
+    try {
+      user = await User.findOne({ email }).select('+password');
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+        message: dbError.message
+      });
+    }
     
     if (!user) {
       return res.status(401).json({
@@ -42,8 +63,27 @@ module.exports = async (req, res) => {
       });
     }
     
+    // Check if matchPassword method exists
+    if (typeof user.matchPassword !== 'function') {
+      console.error('matchPassword method not found on user model');
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+    
     // Check if password matches
-    const isMatch = await user.matchPassword(password);
+    let isMatch;
+    try {
+      isMatch = await user.matchPassword(password);
+    } catch (matchError) {
+      console.error('Password match error:', matchError);
+      return res.status(500).json({
+        success: false,
+        error: 'Password verification error',
+        message: matchError.message
+      });
+    }
     
     if (!isMatch) {
       return res.status(401).json({
@@ -55,13 +95,15 @@ module.exports = async (req, res) => {
     // Generate token
     const token = user.getSignedJwtToken();
     
+    // Send back user data and token
     return res.status(200).json({
       success: true,
       token,
       data: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
