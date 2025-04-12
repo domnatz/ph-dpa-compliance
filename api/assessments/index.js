@@ -161,13 +161,15 @@ module.exports = async (req, res) => {
         global.bypassUserAssessments[user.id] = bypassAssessment;
         
         // Generate tasks based on answers
-        // Create tasks based on 'No' answers
+        // Create tasks based on 'No' and 'Partially' answers only
         const tasks = [];
+        let hasNonComplianceAnswers = false;
         
         answers.forEach((answer, index) => {
           const questionText = answer.question || `Question ${answer.questionId || (index + 1)}`;
           
           if (answer.answer === 'No') {
+            hasNonComplianceAnswers = true;
             tasks.push({
               _id: 'mock-task-no-' + Date.now() + '-' + index,
               user: user.id,
@@ -180,6 +182,7 @@ module.exports = async (req, res) => {
           }
           
           if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
+            hasNonComplianceAnswers = true;
             tasks.push({
               _id: 'mock-task-partial-' + Date.now() + '-' + index,
               user: user.id,
@@ -192,24 +195,11 @@ module.exports = async (req, res) => {
           }
         });
         
-        // If no tasks were created but answers exist, create a default task
-        if (tasks.length === 0 && answers.length > 0) {
-          tasks.push({
-            _id: 'mock-task-default-' + Date.now(),
-            user: user.id,
-            text: 'Maintain compliance documentation',
-            description: 'Keep your privacy documentation up to date and review regularly.',
-            completed: false,
-            priority: 'low',
-            createdAt: new Date()
-          });
-        }
-        
-        // Store the tasks in global memory
+        // Store the tasks in global memory (even if empty)
         global.bypassUserTasks[user.id] = tasks;
         
         console.log(`Stored ${tasks.length} bypass user tasks in memory`);
-        console.log('Stored bypass user assessment in memory');
+        console.log(`Has non-compliance answers: ${hasNonComplianceAnswers}`);
         
         return res.status(201).json({
           success: true,
