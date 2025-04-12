@@ -9,7 +9,8 @@ const TaskList = ({ tasks, onToggleTask }) => {
   };
 
   // Function to handle checkbox click with proper event handling
-  const handleToggleTask = (taskId) => {
+  const handleToggleTask = (taskId, e) => {
+    if (e) e.stopPropagation(); // Stop propagation to prevent any parent clicks
     console.log('Toggling task with ID:', taskId);
     onToggleTask(taskId);
   };
@@ -36,7 +37,7 @@ const TaskList = ({ tasks, onToggleTask }) => {
             <li key={task._id} className="flex items-start p-3 rounded-md hover:bg-gray-50 transition-colors">
               <div className="flex-shrink-0 mt-1 mr-3">
                 <div
-                  onClick={() => handleToggleTask(task._id)}
+                  onClick={(e) => handleToggleTask(task._id, e)}
                   className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center ${
                     task.completed 
                       ? 'bg-blue-500 border-blue-500' 

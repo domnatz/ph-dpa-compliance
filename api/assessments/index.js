@@ -13,6 +13,55 @@ if (!global.bypassUserTasks) {
   global.bypassUserTasks = {};
 }
 
+// Function to convert question text to actionable task
+const convertQuestionToTask = (questionText) => {
+  // Remove question phrasing
+  questionText = questionText.replace(/^Do you have /i, '')
+    .replace(/^Have you /i, '')
+    .replace(/^Are you /i, '')
+    .replace(/^Is there /i, '')
+    .replace(/\?$/, '');
+  
+  // Map common question topics to specific action items
+  if (questionText.toLowerCase().includes('privacy notice')) {
+    return {
+      text: 'Create a Privacy Notice for your users',
+      description: 'Draft and implement a comprehensive Privacy Notice that informs users about how their data is collected, used, and protected.'
+    };
+  } 
+  else if (questionText.toLowerCase().includes('data breach')) {
+    return {
+      text: 'Establish data breach notification procedures',
+      description: 'Develop and implement a protocol for identifying, reporting, and responding to data breaches within required timeframes.'
+    };
+  }
+  else if (questionText.toLowerCase().includes('data protection officer')) {
+    return {
+      text: 'Appoint a Data Protection Officer',
+      description: 'Designate a qualified individual to oversee data protection compliance within your organization.'
+    };
+  }
+  else if (questionText.toLowerCase().includes('consent')) {
+    return {
+      text: 'Implement proper consent mechanisms',
+      description: 'Design and deploy systems to obtain, record, and manage valid user consent for all data processing activities.'
+    };
+  }
+  else if (questionText.toLowerCase().includes('rights') || questionText.toLowerCase().includes('access request')) {
+    return {
+      text: 'Create a data subject rights procedure',
+      description: 'Establish a process to handle data subject requests including access, deletion, and portability rights.'
+    };
+  }
+  else {
+    // For any other questions, create a generic action item
+    return {
+      text: `Implement a ${questionText} process`,
+      description: 'Create and document the necessary procedures to address this compliance requirement.'
+    };
+  }
+};
+
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -161,17 +210,20 @@ module.exports = async (req, res) => {
         // Generate tasks based on answers
         const tasks = [];
         
-        // Generate tasks based on answers
+        // Generate tasks based on answers with improved phrasing
         answers.forEach((answer, index) => {
           // Use the question text from the answer object if available
           const questionText = answer.question || `Question ${answer.questionId || (index + 1)}`;
           
           if (answer.answer === 'No') {
+            // Convert the question to an actionable task
+            const actionTask = convertQuestionToTask(questionText);
+            
             tasks.push({
               _id: 'mock-task-no-' + Date.now() + '-' + index,
               user: user.id,
-              text: `Implement ${questionText}`,
-              description: `You need to address this requirement to comply with regulations.`,
+              text: actionTask.text,
+              description: actionTask.description,
               completed: false,
               priority: 'high',
               createdAt: new Date()
@@ -179,11 +231,14 @@ module.exports = async (req, res) => {
           }
           
           if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
+            // Convert the question to a "complete" task
+            const actionTask = convertQuestionToTask(questionText);
+            
             tasks.push({
               _id: 'mock-task-partial-' + Date.now() + '-' + index,
               user: user.id,
-              text: `Complete ${questionText} implementation`,
-              description: `You've started addressing this requirement but need to fully implement it.`,
+              text: `Complete ${actionTask.text}`,
+              description: `You've started this compliance task but need to fully implement it.`,
               completed: false,
               priority: 'medium',
               createdAt: new Date()
