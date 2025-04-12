@@ -32,6 +32,8 @@ const assessmentsHandler = require('./api/assessments/index');
 const taskHandler = require('./api/assessments/task');
 const taskByIdHandler = require('./api/assessments/taskbyId');
 const emergencyLoginHandler = require('./api/users/emergency-login');
+const directRegisterHandler = require('./api/users/direct-register');
+const debugInfoHandler = require('./api/users/debug-info');
 
 // Define API routes explicitly
 app.post('/api/users/login', (req, res) => loginHandler(req, res));
@@ -66,7 +68,12 @@ app.post('/api/login-test', (req, res) => {
     }
   });
 });
+
+// Authentication fix endpoints
 app.post('/api/users/emergency-login', (req, res) => emergencyLoginHandler(req, res));
+app.post('/api/users/direct-register', (req, res) => directRegisterHandler(req, res));
+app.get('/api/users/debug-info', (req, res) => debugInfoHandler(req, res));
+
 app.get('/manifest.json', (req, res) => manifestHandler(req, res));
 
 // Serve static files from React build
