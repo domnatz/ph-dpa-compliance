@@ -1,9 +1,13 @@
 import axios from 'axios';
 import storage from './storage';
 
-// Create axios instance with base configuration
+// Create axios instance with environment-aware base configuration
+const baseURL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:3000/api'  // Development 
+  : '/api';                      // Production (Vercel)
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json'
   }

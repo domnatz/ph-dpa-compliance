@@ -84,13 +84,14 @@ const AssessmentState = props => {
     }
   };
 
-  // Update task status
+    // Update task status
   const updateTaskStatus = async (taskId, data) => {
     try {
-      const res = await api.put(`/api/assessments/tasks/${taskId}`, data);
+      // Remove the redundant /api prefix since api.js already adds it
+      const res = await api.put(`/assessments/tasks/${taskId}`, data);
       
       dispatch({
-        type: 'UPDATE_TASK', // Changed from UPDATE_TASK to 'UPDATE_TASK'
+        type: 'UPDATE_TASK',
         payload: res.data.data
       });
       
@@ -98,7 +99,7 @@ const AssessmentState = props => {
     } catch (error) {
       console.error('Error updating task:', error);
       dispatch({
-        type: 'ASSESSMENT_ERROR', // Changed from ASSESSMENT_ERROR to 'ASSESSMENT_ERROR'
+        type: 'ASSESSMENT_ERROR',
         payload: error.response?.data?.error || 'Error updating task'
       });
       throw error;
