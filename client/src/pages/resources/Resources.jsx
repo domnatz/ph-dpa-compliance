@@ -1,214 +1,161 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import api from '../../utils/api';
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import api from '../utils/api';
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
-  
-  // Wrap staticResources in useMemo to prevent recreation on every render
-  const staticResources = useMemo(() => [
-    {
-      _id: 'template1',
-      title: 'Privacy Policy Guidelines',
-      description: 'Official guidelines for creating your organization\'s privacy policy in compliance with PhilDPA requirements.',
-      category: 'template',
-      externalUrl: 'https://www.privacy.gov.ph/privacy-policy-templates/'
-    },
-    {
-      _id: 'template2',
-      title: 'Data Sharing Agreement Guidelines',
-      description: 'NPC guidance on creating proper data sharing agreements as required by the Philippine Data Privacy Act.',
-      category: 'template',
-      externalUrl: 'https://www.privacy.gov.ph/data-sharing-agreement/'
-    },
-    {
-      _id: 'guide1',
-      title: 'DPO Registration Guidelines',
-      description: 'Official instructions on appointing and registering a Data Protection Officer with the NPC.',
-      category: 'guide',
-      externalUrl: 'https://www.privacy.gov.ph/registration-of-data-protection-officers/'
-    },
-    {
-      _id: 'guide2',
-      title: 'Personal Data Breach Management',
-      description: 'NPC guidelines on creating and implementing a data breach response protocol.',
-      category: 'guide',
-      externalUrl: 'https://www.privacy.gov.ph/memorandum-circulars/npc-circular-16-03-personal-data-breach-management/'
-    },
-    {
-      _id: 'form1',
-      title: 'NPC Complaints Form',
-      description: 'Official form for filing complaints related to data privacy violations.',
-      category: 'form',
-      externalUrl: 'https://www.privacy.gov.ph/complaints-assistance/'
-    },
-    {
-      _id: 'form2',
-      title: 'Registration of Data Processing Systems',
-      description: 'Register your data processing systems with the National Privacy Commission.',
-      category: 'form',
-      externalUrl: 'https://www.privacy.gov.ph/registration-of-data-processing-systems/'
-    }
-  ], []); // Empty dependency array means this only runs once
-  
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const res = await api.get('/resources');
-        setResources(res.data.data);
+        setLoading(true);
+        // Simulate API call - replace with actual endpoint when available
+        // const res = await api.get('/resources');
+        
+        // Temporary: Use mock data until API is ready
+        const mockResources = [
+          {
+            id: 1,
+            title: 'Philippine Data Privacy Act of 2012',
+            description: 'Full text of the Republic Act 10173',
+            category: 'Laws',
+            url: 'https://www.privacy.gov.ph/data-privacy-act/',
+            icon: 'file-text'
+          },
+          {
+            id: 2,
+            title: 'NPC Privacy Toolkit',
+            description: 'Privacy toolkit for organizations',
+            category: 'Guidelines',
+            url: 'https://www.privacy.gov.ph/privacy-toolkit/',
+            icon: 'tool'
+          },
+          {
+            id: 3,
+            title: 'Data Protection Officer Registration',
+            description: 'Guidelines for registering a DPO',
+            category: 'Guidelines',
+            url: 'https://www.privacy.gov.ph/registration-of-data-protection-officers/',
+            icon: 'user-check'
+          },
+          {
+            id: 4,
+            title: 'Privacy Impact Assessment Guide',
+            description: 'How to conduct a privacy impact assessment',
+            category: 'Templates',
+            url: 'https://www.privacy.gov.ph/privacy-impact-assessment/',
+            icon: 'clipboard'
+          },
+          {
+            id: 5,
+            title: 'Data Breach Management',
+            description: 'Guidelines for handling data breaches',
+            category: 'Guidelines',
+            url: 'https://www.privacy.gov.ph/data-breach-management/',
+            icon: 'alert-triangle'
+          }
+        ];
+
+        setResources(mockResources);
+        
+        // Extract unique categories
+        const uniqueCategories = ['All', ...new Set(mockResources.map(resource => resource.category))];
+        setCategories(uniqueCategories);
+        
         setLoading(false);
       } catch (err) {
-        console.log('Using static resources instead of API');
-        // Use static resources as fallback
-        setResources(staticResources);
+        console.error('Failed to fetch resources:', err);
+        setError('Failed to load resources. Please try again later.');
         setLoading(false);
       }
     };
-    
+
     fetchResources();
-  }, [staticResources]);
-  
-  if (loading) {
-    return <div className="text-center py-12">Loading resources...</div>;
-  }
-  
-  // Categorize resources
-  const templates = resources.filter(r => r.category === 'template');
-  const guides = resources.filter(r => r.category === 'guide');
-  const forms = resources.filter(r => r.category === 'form');
-  
+  }, []);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
+  // Safely filter resources - check if resources exists first
+  const filteredResources = resources && resources.length > 0 
+    ? (selectedCategory === 'All' 
+        ? resources 
+        : resources.filter(resource => resource.category === selectedCategory))
+    : [];
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">DPA Resources</h1>
+      <Helmet>
+        <title>Resources | Philippine Data Privacy Act Compliance</title>
+      </Helmet>
       
-      <div className="compliance-section px-6 py-8">
-        <h2 className="text-2xl font-bold mb-4">Philippine Data Privacy Act Resources</h2>
-        <p className="text-lg mb-4">
-          These official resources from the National Privacy Commission will help your organization 
-          comply with PhilDPA requirements. Access guidelines, templates, and official forms.
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold text-primary mb-8">Resources</h1>
       
-      <div className="mb-8 mt-10">
-        <h2 className="text-2xl font-bold mb-4">Templates & Guidelines</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {templates.length > 0 ? (
-            templates.map(resource => (
-              <div key={resource._id} className="privacy-card-compliance">
-                <h3 className="text-xl font-semibold mb-2">{resource.title}</h3>
-                <p className="mb-4 text-gray-600">{resource.description}</p>
-                <span className="compliance-badge mb-3">Official Resource</span>
-                <a
-                  href={resource.externalUrl}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="btn-compliance block mt-4 text-center"
-                >
-                  Visit Website
-                </a>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No templates available.</p>
-          )}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      </div>
-      
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Official Guides</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {guides.length > 0 ? (
-            guides.map(resource => (
-              <div key={resource._id} className="privacy-card-security">
-                <h3 className="text-xl font-semibold mb-2">{resource.title}</h3>
-                <p className="mb-4 text-gray-600">{resource.description}</p>
-                <span className="dpa-badge mb-3">NPC Guide</span>
-                <a
-                  href={resource.externalUrl}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="btn-security block mt-4 text-center"
-                >
-                  Access Guide
-                </a>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No guides available.</p>
-          )}
+      ) : error ? (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
         </div>
-      </div>
-      
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Registration & Forms</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {forms.length > 0 ? (
-            forms.map(resource => (
-              <div key={resource._id} className="privacy-card-warning">
-                <h3 className="text-xl font-semibold mb-2">{resource.title}</h3>
-                <p className="mb-4 text-gray-600">{resource.description}</p>
-                <span className="warning-badge mb-3">Official Form</span>
+      ) : (
+        <>
+          {/* Category filters */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  selectedCategory === category 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+          
+          {/* Resources grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredResources.length > 0 ? (
+              filteredResources.map(resource => (
                 <a
-                  href={resource.externalUrl}
-                  target="_blank" 
+                  key={resource.id}
+                  href={resource.url}
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-warning block mt-4 text-center"
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                 >
-                  Access Form
+                  <div className="flex items-start mb-4">
+                    <span className="bg-primary-light p-3 rounded-full text-primary mr-4">
+                      <i className={`feather icon-${resource.icon}`}></i>
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{resource.title}</h3>
+                      <span className="inline-block bg-gray-100 rounded-full px-3 py-1 text-xs font-semibold text-gray-600">
+                        {resource.category}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600">{resource.description}</p>
                 </a>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                No resources found for this category.
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No forms available.</p>
-          )}
-        </div>
-      </div>
-      
-      <div className="mt-12 data-protection-box">
-        <h2 className="text-2xl font-bold mb-4">Key PhilDPA References</h2>
-        <ul className="list-disc pl-5 space-y-2">
-          <li>
-            <a 
-              href="https://www.privacy.gov.ph/data-privacy-act/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Data Privacy Act of 2012 (RA 10173) - Full Text
-            </a>
-          </li>
-          <li>
-            <a 
-              href="https://www.privacy.gov.ph/implementing-rules-regulations-data-privacy-act-2012/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Implementing Rules and Regulations (IRR)
-            </a>
-          </li>
-          <li>
-            <a 
-              href="https://www.privacy.gov.ph/memorandum-circulars/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              NPC Circulars and Issuances
-            </a>
-          </li>
-          <li>
-            <a 
-              href="https://www.privacy.gov.ph/advisories/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              NPC Advisories
-            </a>
-          </li>
-        </ul>
-      </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

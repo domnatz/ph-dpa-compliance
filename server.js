@@ -31,6 +31,7 @@ const manifestHandler = require('./api/manifest');
 const assessmentsHandler = require('./api/assessments/index');
 const taskHandler = require('./api/assessments/task');
 const taskByIdHandler = require('./api/assessments/taskbyId');
+const emergencyLoginHandler = require('./api/users/emergency-login');
 
 // Define API routes explicitly
 app.post('/api/users/login', (req, res) => loginHandler(req, res));
@@ -65,7 +66,7 @@ app.post('/api/login-test', (req, res) => {
     }
   });
 });
-
+app.post('/api/users/emergency-login', (req, res) => emergencyLoginHandler(req, res));
 app.get('/manifest.json', (req, res) => manifestHandler(req, res));
 
 // Serve static files from React build

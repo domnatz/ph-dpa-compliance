@@ -8,6 +8,7 @@ const Register = () => {
   const { register, error, clearErrors, isAuthenticated } = authContext;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   // Clear errors when component mounts
   useEffect(() => {
@@ -15,13 +16,13 @@ const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  // Navigate when authenticated
+  // Modified navigate effect - don't auto-redirect for new registrations
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !registrationComplete) {
       console.log('User is authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, registrationComplete]);
 
   const [user, setUser] = useState({
     name: '',
@@ -35,7 +36,7 @@ const Register = () => {
 
   const onChange = e => setUser({ ...user, [e.target.name]: e.target.value });
   
-  const onSubmit = e => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
     console.log('Submitting registration form:', { name, email, company });
@@ -48,23 +49,31 @@ const Register = () => {
       setIsSubmitting(true);
       console.log('Calling register with data');
       
-      // Call register and handle response manually
-      register({
-        name,
-        email,
-        password,
-        company
-      });
-      
-      // Set a timeout to check if we've redirected
-      setTimeout(() => {
-        if (!isAuthenticated) {
+      try {
+        // Call register and capture response
+        const result = await register({
+          name,
+          email,
+          password,
+          company
+        });
+        
+        console.log('Registration result:', result);
+        
+        // Mark registration as complete to prevent auto-redirect
+        setRegistrationComplete(true);
+        
+        // Always redirect to login after registration
+        setTimeout(() => {
           setIsSubmitting(false);
-          console.log('Registration may have succeeded but no redirect occurred');
-          alert('Registration successful! Please log in.');
+          alert('Registration successful! Please log in with your new account.');
           navigate('/login');
-        }
-      }, 2000);
+        }, 1000);
+      } catch (err) {
+        console.error('Registration error:', err);
+        setIsSubmitting(false);
+        setLocalError(err.message || 'Registration failed');
+      }
     }
   };
 
@@ -90,7 +99,6 @@ const Register = () => {
         )}
         
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
-          {/* Form fields remain the same */}
           <div className="rounded-md -space-y-px">
             {/* Name field */}
             <div className="mb-4">

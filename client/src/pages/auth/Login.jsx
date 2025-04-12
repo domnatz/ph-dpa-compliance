@@ -1,11 +1,14 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/auth/authContext';
+import axios from 'axios';
 
 const Login = () => {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
-  const { login, error, clearErrors, isAuthenticated } = authContext;
+  const { login, loginSuccess, error, clearErrors, isAuthenticated } = authContext;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localError, setLocalError] = useState('');
 
   // Fix the same infinite loop issue
   useEffect(() => {
@@ -21,8 +24,6 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Rest of your component...
-
   const [user, setUser] = useState({
     email: '',
     password: ''
@@ -32,15 +33,71 @@ const Login = () => {
 
   const onChange = e => setUser({ ...user, [e.target.name]: e.target.value });
 
-  const onSubmit = e => {
-    e.preventDefault();
-    if (email === '' || password === '') {
-      alert('Please fill in all fields');
-    } else {
-      login({
+  // Try emergency login if regular login fails
+  const tryEmergencyLogin = async () => {
+    try {
+      console.log('Attempting emergency login');
+      const res = await axios.post('/api/users/emergency-login', {
         email,
         password
       });
+      
+      if (res.data.success) {
+        console.log('Emergency login successful');
+        // Use the loginSuccess action from context
+        if (loginSuccess) {
+          loginSuccess(res.data);
+        } else {
+          console.warn('loginSuccess action not available, using workaround');
+          // Fallback if loginSuccess isn't available in your context
+          localStorage.setItem('token', res.data.token);
+          window.location.href = '/dashboard';
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error('Emergency login failed:', err);
+      setLocalError('Login failed. Please check your credentials and try again.');
+      return false;
+    }
+    return false;
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setLocalError('');
+    
+    if (email === '' || password === '') {
+      setLocalError('Please fill in all fields');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // First try regular login
+      await login({
+        email,
+        password
+      });
+      
+      // If we're still here and not authenticated, try emergency login
+      setTimeout(async () => {
+        if (!isAuthenticated) {
+          console.log('Regular login did not redirect, trying emergency login');
+          const emergencyLoginSucceeded = await tryEmergencyLogin();
+          
+          if (!emergencyLoginSucceeded) {
+            setLocalError('Login failed with both methods. Please check your credentials.');
+          }
+        }
+        setIsSubmitting(false);
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Login submission error:', err);
+      setLocalError('An error occurred during login');
+      setIsSubmitting(false);
     }
   };
 
@@ -59,9 +116,9 @@ const Login = () => {
           </p>
         </div>
       
-        {error && (
+        {(error || localError) && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
-            <span className="block sm:inline">{typeof error === 'string' ? error : 'Authentication failed'}</span>
+            <span className="block sm:inline">{localError || (typeof error === 'string' ? error : 'Authentication failed')}</span>
           </div>
         )}
         
@@ -78,6 +135,7 @@ const Login = () => {
                 placeholder="Email address"
                 value={email}
                 onChange={onChange}
+                disabled={isSubmitting}
               />
             </div>
             <div className="mb-4">
@@ -91,6 +149,7 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={onChange}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -99,8 +158,9 @@ const Login = () => {
             <button
               type="submit"
               className="btn-security w-full"
+              disabled={isSubmitting}
             >
-              Sign in
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>
