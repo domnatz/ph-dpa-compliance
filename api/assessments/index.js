@@ -29,6 +29,9 @@ module.exports = async (req, res) => {
     
     // Verify token and get user
     const user = await verifyToken(req, res, () => {});
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized access' });
+    }
     
     // Restrict access for bypass users
     if (user.isBypassUser) {

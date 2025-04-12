@@ -2,17 +2,6 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
-const JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
-
-// Generate JWT token
-exports.generateToken = (userId) => {
-  return jwt.sign({ id: userId }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRE
-  });
-};
-
-// Verify token and return user
 exports.verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -35,7 +24,7 @@ exports.verifyToken = async (req, res, next) => {
         role: 'user',
         isBypassUser: true
       };
-      return next();
+      return req.user; // Return the user object for further use
     }
 
     // For regular users, fetch the user from the database
@@ -49,7 +38,7 @@ exports.verifyToken = async (req, res, next) => {
     }
 
     req.user = user;
-    next();
+    return req.user; // Return the user object for further use
   } catch (err) {
     console.error('Token verification error:', err);
     return res.status(401).json({ success: false, error: 'Invalid token' });
