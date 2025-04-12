@@ -1,6 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const TaskList = ({ tasks, onToggleTask }) => {
+  // Function to handle take assessment button click
+  const handleTakeAssessment = (e) => {
+    e.preventDefault();
+    window.location.href = '/assessment?new=true';
+  };
+
   return (
     <div className="privacy-card-compliance rounded-lg p-6 shadow-sm">
       <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--privacy-teal)' }}>
@@ -10,7 +17,12 @@ const TaskList = ({ tasks, onToggleTask }) => {
       {tasks.length === 0 ? (
         <div className="data-protection-box text-center py-4">
           <p className="text-gray-600">No tasks available. Complete the assessment to generate tasks.</p>
-          <button className="btn-compliance mt-3">Take Assessment</button>
+          <button 
+            className="btn-compliance mt-3"
+            onClick={handleTakeAssessment}
+          >
+            Take Assessment
+          </button>
         </div>
       ) : (
         <ul className="space-y-4">
