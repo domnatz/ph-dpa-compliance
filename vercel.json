@@ -3,7 +3,14 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "client/build",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1.js" },
+    { "source": "/api/assessments/tasks/:id", "destination": "/api/assessments/taskbyId.js" },
+    { "source": "/api/assessments/tasks", "destination": "/api/assessments/task.js" },
+    { "source": "/api/assessments", "destination": "/api/assessments/index.js" },
+    { "source": "/api/users/register", "destination": "/api/users/register.js" },
+    { "source": "/api/users/login", "destination": "/api/users/login.js" },
+    { "source": "/api/users/me", "destination": "/api/users/me.js" },
+    { "source": "/api/test", "destination": "/api/test.js" },
+    { "source": "/api", "destination": "/api/index.js" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
