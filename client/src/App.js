@@ -1,4 +1,4 @@
-import React, { useContext, useEffect} from 'react';
+import React, { useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -11,6 +11,7 @@ import Resources from './pages/resources/Resources';
 import PrivateRoute from './components/routing/PrivateRoute';
 import AuthState from './context/auth/authState';
 import AssessmentState from './context/assessment/assessmentState';
+import TaskState from './context/task/taskState'; // Import TaskState
 import AuthContext from './context/auth/authContext';
 
 const AppContent = () => {
@@ -21,14 +22,12 @@ const AppContent = () => {
     // Check localStorage directly for token
     const token = localStorage.getItem('token');
     console.log('App initialization - Token exists:', !!token);
-    
+
     if (token) {
       loadUser();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Rest of component...
 
   return (
     <div className="flex flex-col min-h-screen text-gray-900">
@@ -64,9 +63,11 @@ const App = () => {
   return (
     <AuthState>
       <AssessmentState>
-        <Router>
-          <AppContent />
-        </Router>
+        <TaskState> {/* Wrap the app with TaskState */}
+          <Router>
+            <AppContent />
+          </Router>
+        </TaskState>
       </AssessmentState>
     </AuthState>
   );
