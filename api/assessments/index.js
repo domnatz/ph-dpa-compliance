@@ -1,6 +1,7 @@
 const connectDB = require('../../utils/db');
 const { verifyToken } = require('../../utils/auth');
 const Assessment = require('../../models/assessmentModel');
+const mongoose = require('mongoose');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -33,18 +34,37 @@ module.exports = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Unauthorized access' });
     }
     
-    // Restrict access for bypass users
-    if (user.isBypassUser) {
-      console.log('Bypass user cannot access assessments:', user.id);
-      return res.status(403).json({
-        success: false,
-        error: 'Bypass users are not allowed to access assessments'
-      });
-    }
+    // Special handling for bypass users - convert their custom ID to valid ObjectId
+    const userIdForQuery = user.isBypassUser 
+      ? mongoose.Types.ObjectId() // Generate a temporary valid ObjectId for this request
+      : user._id;
     
-    // Handle GET method - get the latest assessment
+    console.log(`User accessing assessments: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
+    
+    // Handle GET method - get the latest assessment or return mock data for bypass
     if (req.method === 'GET') {
-      const assessment = await Assessment.findOne({ user: user._id }).sort('-completedAt');
+      if (user.isBypassUser) {
+        // Return mock assessment data for bypass users
+        return res.status(200).json({
+          success: true,
+          data: {
+            _id: 'mock-assessment-123',
+            user: user.id || user._id,
+            title: 'Sample Assessment',
+            score: 85,
+            completedAt: new Date(),
+            answers: [
+              { question: 'Data Protection Policy', answer: 'Yes', comments: 'Implemented fully' },
+              { question: 'Data Breach Response', answer: 'Partially', comments: 'In progress' },
+              { question: 'User Consent Mechanisms', answer: 'Yes', comments: 'Deployed across all systems' }
+            ],
+            isBypassData: true
+          }
+        });
+      }
+      
+      // Regular user flow - fetch from database
+      const assessment = await Assessment.findOne({ user: userIdForQuery }).sort('-completedAt');
       
       if (!assessment) {
         return res.status(404).json({
@@ -83,9 +103,24 @@ module.exports = async (req, res) => {
       // Cap score at 100
       score = Math.min(score, 100);
       
-      // Create a new assessment
+      if (user.isBypassUser) {
+        // For bypass users, return a mock created assessment without DB insertion
+        return res.status(201).json({
+          success: true,
+          data: {
+            _id: 'mock-assessment-' + Date.now(),
+            user: user.id || user._id,
+            answers: answers,
+            score: score,
+            completedAt: new Date(),
+            isBypassData: true
+          }
+        });
+      }
+      
+      // Create a new assessment for regular users
       const assessment = await Assessment.create({
-        user: user._id,
+        user: userIdForQuery,
         answers,
         score
       });
