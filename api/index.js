@@ -1,16 +1,15 @@
 const connectDB = require('../utils/db');
 
-// Import all handler functions
+// Import only essential handler functions
 const loginHandler = require('./users/login');
 const registerHandler = require('./users/register');
 const meHandler = require('./users/me');
-const loginTestHandler = require('./login-test');
-const testHandler = require('./test');
-const dbTestHandler = require('./db-test');
 const manifestHandler = require('./manifest');
 const assessmentsHandler = require('./assessments/index');
 const taskHandler = require('./assessments/task');
 const taskByIdHandler = require('./assessments/taskbyId');
+
+// Test handlers removed
 
 module.exports = async (req, res) => {
   // Set CORS headers for all requests
@@ -27,10 +26,13 @@ module.exports = async (req, res) => {
   // Extract the path from the URL
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = url.pathname;
+  
+  console.log(`API Router handling: ${req.method} ${path}`);
+  const startTime = Date.now();
 
   try {
     // Connect to the database for routes that need it
-    if (path !== '/manifest.json' && !path.includes('/login-test') && !path.includes('/test')) {
+    if (path !== '/manifest.json') {
       await connectDB();
     }
 
@@ -41,12 +43,6 @@ module.exports = async (req, res) => {
       return registerHandler(req, res);
     } else if (path === '/api/users/me') {
       return meHandler(req, res);
-    } else if (path === '/api/login-test') {
-      return loginTestHandler(req, res);
-    } else if (path === '/api/test') {
-      return testHandler(req, res);
-    } else if (path === '/api/db-test') {
-      return dbTestHandler(req, res);
     } else if (path === '/manifest.json') {
       return manifestHandler(req, res);
     } else if (path === '/api/assessments' && !path.includes('/tasks')) {
@@ -58,8 +54,26 @@ module.exports = async (req, res) => {
       const id = path.split('/').pop();
       req.query = { ...req.query, id };
       return taskByIdHandler(req, res);
-    } else {
-      // Default response for base API path or unmatched routes
+    } 
+    
+    // Add a fallback login-test route for backward compatibility
+    else if (path === '/api/login-test') {
+      console.log('Using built-in login test fallback');
+      return res.status(200).json({
+        success: true,
+        token: 'test-token-123',
+        data: {
+          id: 'test-id',
+          name: 'Test User',
+          email: req.body?.email || 'test@example.com',
+          role: 'user'
+        }
+      });
+    } 
+    
+    // Default response for unmatched routes
+    else {
+      console.log(`Route not found: ${path}`);
       return res.status(404).json({ 
         error: 'Not Found',
         message: `Route ${path} not found`
@@ -71,5 +85,7 @@ module.exports = async (req, res) => {
       error: 'Server Error', 
       message: error.message 
     });
+  } finally {
+    console.log(`Request to ${path} completed in ${Date.now() - startTime}ms`);
   }
 };
