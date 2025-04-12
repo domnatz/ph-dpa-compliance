@@ -47,6 +47,10 @@
     {
       "src": "/(.*)",
       "dest": "/client/build/index.html"
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test.js"
     }
   ],
   "env": {
