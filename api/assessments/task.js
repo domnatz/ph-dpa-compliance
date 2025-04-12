@@ -73,6 +73,8 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { taskId, completed } = req.body;
       
+      console.log('Task update request received:', { taskId, completed });
+      
       if (!taskId) {
         return res.status(400).json({
           success: false,

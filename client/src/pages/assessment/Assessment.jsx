@@ -1,11 +1,10 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthContext from '../../context/auth/authContext';
-import AssessmentContext from '../../context/assessment/assessmentContext';
 import QuestionCard from '../../components/assessment/QuestionCard';
 import ProgressBar from '../../components/assessment/ProgressBar';
+import AuthContext from '../../context/auth/authContext';
+import AssessmentContext from '../../context/assessment/assessmentContext';
 
-// Assessment questions
 const questions = [
   {
     id: 1,
@@ -69,6 +68,17 @@ const Assessment = () => {
       });
       setAnswers(existingAnswers);
     }
+    
+    // Check for query parameters (for new assessments)
+    const params = new URLSearchParams(window.location.search);
+    const isNewAssessment = params.get('new') === 'true';
+    
+    if (isNewAssessment) {
+      // Clear any existing answers if starting a new assessment
+      setAnswers({});
+      setCurrentQuestion(0);
+      setIsComplete(false);
+    }
   }, [isAuthenticated, navigate, assessment]);
   
   const handleAnswer = (questionId, answer) => {
@@ -79,8 +89,14 @@ const Assessment = () => {
   };
   
   const handleNext = () => {
+    // Ensure the current question has been answered
+    if (!answers[questions[currentQuestion].id]) {
+      // Could add validation/notification here
+      return;
+    }
+    
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+      setCurrentQuestion(prev => prev + 1);
     } else {
       setIsComplete(true);
     }
@@ -88,16 +104,28 @@ const Assessment = () => {
   
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+      setCurrentQuestion(prev => prev - 1);
     }
+  };
+  
+  const calculateProgress = () => {
+    const answeredCount = Object.keys(answers).length;
+    return Math.round((answeredCount / questions.length) * 100);
   };
   
   const handleSubmit = async () => {
     try {
-      const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
-        questionId: parseInt(questionId),
-        answer
-      }));
+      // Include both questionId and question text when formatting answers
+      const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => {
+        const question = questions.find(q => q.id === parseInt(questionId));
+        return {
+          questionId: parseInt(questionId),
+          question: question ? question.question : `Question ${questionId}`,
+          answer
+        };
+      });
+      
+      console.log('Submitting formatted answers:', formattedAnswers);
       
       await submitAssessment(formattedAnswers);
       await generateTasks();
@@ -106,14 +134,6 @@ const Assessment = () => {
       console.error('Failed to submit assessment:', error);
     }
   };
-  
-  const calculateProgress = () => {
-    return Object.keys(answers).length / questions.length * 100;
-  };
-  
-  if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
-  }
   
   return (
     <div className="container mx-auto px-4 py-8">

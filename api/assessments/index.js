@@ -106,34 +106,40 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { answers } = req.body;
       
-      // Log received answers for debugging
-      console.log('Received answers for assessment:', answers ? answers.length : 0);
+      // Log received answers to debug
+      console.log('Received answers for scoring:', JSON.stringify(answers));
       
       if (!answers || !Array.isArray(answers)) {
-        console.error('Invalid answers format:', req.body);
         return res.status(400).json({
           success: false,
           error: 'Please provide a valid answers array'
         });
       }
       
-      // Calculate score correctly
+      // Calculate score correctly - start at 0 and calculate percentage
       let score = 0;
       const possiblePoints = answers.length * 20; // Maximum possible points
       
-      answers.forEach(answer => {
+      // Log each answer and its contribution to score
+      answers.forEach((answer, index) => {
+        console.log(`Processing answer ${index + 1}: ${answer.questionId} - ${answer.answer}`);
+        
         if (answer.answer === 'Yes') {
           score += 20; // Full points
+          console.log(`  Added 20 points for 'Yes', total now: ${score}`);
         } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
           score += 10; // Half points
+          console.log(`  Added 10 points for '${answer.answer}', total now: ${score}`);
+        } else {
+          // No points for other answers
+          console.log(`  Added 0 points for '${answer.answer}', total still: ${score}`);
         }
-        // No points for 'No' answers
       });
       
-      // Calculate score as percentage of possible points (handle division by zero)
-      const finalScore = possiblePoints > 0 ? Math.round((score / possiblePoints) * 100) : 0;
+      // Calculate score as percentage of possible points
+      const finalScore = Math.round((score / possiblePoints) * 100);
       
-      console.log(`Final assessment score: ${finalScore}%`);
+      console.log(`Final assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
       
       if (user.isBypassUser) {
         // For bypass users, store the assessment in memory and return it
@@ -152,10 +158,12 @@ module.exports = async (req, res) => {
         }
         global.bypassUserAssessments[user.id] = bypassAssessment;
         
-        // Create tasks based on 'No' and 'Partially' answers
+        // Generate tasks based on answers
         const tasks = [];
         
+        // Generate tasks based on answers
         answers.forEach((answer, index) => {
+          // Use the question text from the answer object if available
           const questionText = answer.question || `Question ${answer.questionId || (index + 1)}`;
           
           if (answer.answer === 'No') {
@@ -194,32 +202,25 @@ module.exports = async (req, res) => {
         });
       }
       
-      // Regular user flow - create a new assessment in database
-      try {
-        const assessment = await Assessment.create({
-          user: userIdForQuery,
-          answers,
-          score: finalScore
-        });
-        
-        return res.status(201).json({
-          success: true,
-          data: assessment
-        });
-      } catch (error) {
-        console.error('Error creating assessment:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to create assessment',
-          details: error.message
-        });
-      }
+      // Create a new assessment for regular users
+      const assessment = await Assessment.create({
+        user: userIdForQuery,
+        answers,
+        score: finalScore
+      });
+      
+      return res.status(201).json({
+        success: true,
+        data: assessment
+      });
     }
     
     // If the method is not GET or POST
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed'
+      error: 'Method not allowed',
+      method: req.method,
+      allowedMethods: ['GET', 'POST', 'OPTIONS']
     });
     
   } catch (err) {
