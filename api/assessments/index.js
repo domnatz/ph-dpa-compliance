@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
     
     // Special handling for bypass users - convert their custom ID to valid ObjectId
     const userIdForQuery = user.isBypassUser 
-      ? mongoose.Types.ObjectId() // Generate a temporary valid ObjectId for this request
+      ? new mongoose.Types.ObjectId() // Fixed with 'new' keyword
       : user._id;
     
     console.log(`User accessing assessments: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
