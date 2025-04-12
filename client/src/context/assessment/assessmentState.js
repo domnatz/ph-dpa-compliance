@@ -1,7 +1,7 @@
 import React, { useReducer } from 'react';
 import AssessmentContext from './assessmentContext';
 import assessmentReducer from './assessmentReducer';
-import api from '../../utils/api';
+import api from '../../utils/api'; // Use this instead of direct axios calls
 import axios from 'axios'; 
 
 const AssessmentState = props => {
@@ -18,7 +18,8 @@ const AssessmentState = props => {
   const getAssessment = async () => {
     try {
       console.log('Fetching assessment...');
-      const res = await axios.get('/api/assessments');
+      // Changed from axios to api
+      const res = await api.get('/api/assessments');
       
       console.log('Assessment response:', res.data);
       dispatch({
@@ -38,7 +39,8 @@ const AssessmentState = props => {
   const submitAssessment = async answers => {
     try {
       console.log('Submitting assessment answers:', answers);
-      const res = await axios.post('/api/assessments', { answers });
+      // Changed from axios to api
+      const res = await api.post('/api/assessments', { answers });
 
       console.log('Assessment submission response:', res.data);
       dispatch({
@@ -61,8 +63,8 @@ const AssessmentState = props => {
   const getTasks = async () => {
     try {
       console.log('Fetching tasks...');
-      // Changed from "/task" to "/tasks" to match server routes
-      const res = await axios.get('/api/assessments/tasks');
+      // Changed from axios to api
+      const res = await api.get('/api/assessments/tasks');
 
       console.log('Tasks fetched:', res.data.data);
       dispatch({
@@ -82,7 +84,8 @@ const AssessmentState = props => {
   const generateTasks = async () => {
     try {
       console.log('Generating tasks...');
-      const res = await axios.post('/api/assessments', { generateTasks: true });
+      // Changed from axios to api
+      const res = await api.post('/api/assessments', { generateTasks: true });
 
       console.log('Tasks generated:', res.data.data);
       dispatch({
@@ -103,8 +106,8 @@ const AssessmentState = props => {
     try {
       console.log(`Updating task ${taskId} with completed=${completed}`);
       
-      // Changed from "/task" to "/tasks" to match server routes
-      const res = await axios.post('/api/assessments/tasks', {
+      // Changed from axios to api
+      const res = await api.post('/api/assessments/tasks', {
         taskId,
         completed
       });
@@ -144,8 +147,8 @@ const AssessmentState = props => {
       const newStatus = !currentTask.completed;
       console.log(`Toggling task ${taskId} from ${currentTask.completed} to ${newStatus}`);
       
-      // Changed from "/task" to "/tasks" to match server routes
-      const res = await axios.post('/api/assessments/tasks', {
+      // Changed from axios to api
+      const res = await api.post('/api/assessments/tasks', {
         taskId,
         completed: newStatus
       });
