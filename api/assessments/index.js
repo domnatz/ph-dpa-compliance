@@ -34,9 +34,9 @@ module.exports = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Unauthorized access' });
     }
     
-    // Special handling for bypass users - convert their custom ID to valid ObjectId
+    // Use the actual ID instead of creating a new ObjectId for bypass users
     const userIdForQuery = user.isBypassUser 
-      ? new mongoose.Types.ObjectId() // Fixed with 'new' keyword
+      ? user.id // Use the actual ID for bypass users
       : user._id;
     
     console.log(`User accessing assessments: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
@@ -51,12 +51,14 @@ module.exports = async (req, res) => {
             _id: 'mock-assessment-123',
             user: user.id || user._id,
             title: 'Sample Assessment',
-            score: 85,
+            score: 0, // Start at 0 by default
             completedAt: new Date(),
             answers: [
               { question: 'Data Protection Policy', answer: 'Yes', comments: 'Implemented fully' },
               { question: 'Data Breach Response', answer: 'Partially', comments: 'In progress' },
-              { question: 'User Consent Mechanisms', answer: 'Yes', comments: 'Deployed across all systems' }
+              { question: 'User Consent Mechanisms', answer: 'Yes', comments: 'Deployed across all systems' },
+              { question: 'Employee Training', answer: 'No', comments: 'Not started' },
+              { question: 'Data Access Controls', answer: 'Yes', comments: 'Implemented' }
             ],
             isBypassData: true
           }
@@ -90,18 +92,23 @@ module.exports = async (req, res) => {
         });
       }
       
-      // Calculate score (simplified version)
+      // Calculate score correctly - start at 0 and calculate percentage
       let score = 0;
+      const possiblePoints = answers.length * 20; // Maximum possible points
+      
       answers.forEach(answer => {
         if (answer.answer === 'Yes') {
-          score += 20;
+          score += 20; // Full points
         } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
-          score += 10;
+          score += 10; // Half points
         }
+        // 'No' answers get 0 points
       });
       
-      // Cap score at 100
-      score = Math.min(score, 100);
+      // Calculate score as percentage of possible points
+      const finalScore = Math.round((score / possiblePoints) * 100);
+      
+      console.log(`Assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
       
       if (user.isBypassUser) {
         // For bypass users, return a mock created assessment without DB insertion
@@ -109,9 +116,9 @@ module.exports = async (req, res) => {
           success: true,
           data: {
             _id: 'mock-assessment-' + Date.now(),
-            user: user.id || user._id,
+            user: user.id,
             answers: answers,
-            score: score,
+            score: finalScore, // Use the corrected score
             completedAt: new Date(),
             isBypassData: true
           }
@@ -122,7 +129,7 @@ module.exports = async (req, res) => {
       const assessment = await Assessment.create({
         user: userIdForQuery,
         answers,
-        score
+        score: finalScore // Use the corrected score
       });
       
       return res.status(201).json({
