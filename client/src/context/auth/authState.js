@@ -96,55 +96,70 @@ const AuthState = props => {
   };
 
   // Login User - Updated with emergency login capability
-  const login = async formData => {
+  const login = async (formData) => {
     try {
-      dispatch({ type: 'SET_LOADING' });
+      // First try regular login
+      const res = await api.post('/users/login', formData);
+      
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+      }
+      
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: res.data
+      });
+      
+      loadUser();
+      return res.data;
+    } catch (loginError) {
+      console.log('Main login failed, trying emergency endpoint:', loginError);
       
       try {
-        // Try main login first
-        const res = await api.post('/users/login', formData);
+        // If main login fails, try emergency endpoint
+        const emergencyRes = await api.post('/users/emergency-login', formData);
         
-        if (res.data && res.data.token) {
-          localStorage.setItem('token', res.data.token);
+        if (emergencyRes.data.token) {
+          localStorage.setItem('token', emergencyRes.data.token);
         }
         
         dispatch({
           type: 'LOGIN_SUCCESS',
-          payload: res.data
+          payload: emergencyRes.data
         });
         
         loadUser();
-        return res.data;
-      } catch (loginError) {
-        console.error('Main login failed, trying emergency endpoint:', loginError);
+        return emergencyRes.data;
+      } catch (emergencyError) {
+        console.log('Emergency login failed:', emergencyError);
         
-        // If main login fails, try emergency endpoint
         try {
-          const emergencyRes = await api.post('/users/emergency-login', formData);
+          // Final fallback to bypass login
+          const bypassRes = await api.post('/users/bypass-login', formData);
           
-          if (emergencyRes.data && emergencyRes.data.token) {
-            localStorage.setItem('token', emergencyRes.data.token);
+          if (bypassRes.data.token) {
+            localStorage.setItem('token', bypassRes.data.token);
           }
           
           dispatch({
             type: 'LOGIN_SUCCESS',
-            payload: emergencyRes.data
+            payload: bypassRes.data
           });
           
           loadUser();
-          return emergencyRes.data;
-        } catch (emergencyError) {
-          console.error('Emergency login failed:', emergencyError);
-          throw emergencyError; // Propagate error to outer catch
+          console.log('Using bypass login as fallback');
+          return bypassRes.data;
+        } catch (bypassError) {
+          console.error('All login attempts failed:', bypassError);
+          
+          dispatch({
+            type: 'LOGIN_FAIL',
+            payload: bypassError.response?.data?.error || 'Authentication failed'
+          });
+          
+          throw bypassError;
         }
       }
-    } catch (err) {
-      console.error('All login attempts failed:', err);
-      dispatch({
-        type: 'LOGIN_FAIL',
-        payload: err.response?.data?.error || err.message || 'Login failed'
-      });
-      throw err; // Re-throw for component handling
     }
   };
 

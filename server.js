@@ -34,9 +34,11 @@ const taskByIdHandler = require('./api/assessments/taskbyId');
 const emergencyLoginHandler = require('./api/users/emergency-login');
 const directRegisterHandler = require('./api/users/direct-register');
 const debugInfoHandler = require('./api/users/debug-info');
+const bypassLoginHandler = require('./api/users/bypass-login');
 
 // Define API routes explicitly
 app.post('/api/users/login', (req, res) => loginHandler(req, res));
+app.post('/api/users/bypass-login', (req, res) => bypassLoginHandler(req, res));
 
 // Enhanced registration route with improved logging
 app.post('/api/users/register', (req, res) => {
