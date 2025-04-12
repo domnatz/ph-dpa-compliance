@@ -77,26 +77,36 @@ const AuthState = props => {
     // Login User
     const login = async formData => {
       try {
+        setLoading(true);
+        
         const res = await api.post('/users/login', formData);
+        
+        // If successful, save the token
+        if (res.data && res.data.token) {
+          localStorage.setItem('token', res.data.token);
+        }
         
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: res.data
         });
-    
+        
         loadUser();
       } catch (err) {
         console.error('Login error:', err);
         
-        // IMPORTANT: Create a string error message, not an object
+        // Extract the error message as a STRING
         const errorMessage = err.response?.data?.error || 
-                             err.message || 
-                             'Authentication failed';
-                             
+                            err.message || 
+                            'Login failed';
+        
         dispatch({
           type: 'LOGIN_FAIL',
-          payload: errorMessage // String, not object!
+          // Send a STRING as payload, not the error object
+          payload: errorMessage
         });
+      } finally {
+        setLoading(false);
       }
     };
 
