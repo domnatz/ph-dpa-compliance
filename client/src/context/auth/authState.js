@@ -75,9 +75,11 @@ const AuthState = props => {
   };
 
     // Login User
+        // Replace your login function with this fixed version:
     const login = async formData => {
       try {
-        setLoading(true);
+        // Use dispatch instead of setLoading
+        dispatch({ type: 'SET_LOADING' });
         
         const res = await api.post('/users/login', formData);
         
@@ -105,11 +107,8 @@ const AuthState = props => {
           // Send a STRING as payload, not the error object
           payload: errorMessage
         });
-      } finally {
-        setLoading(false);
       }
     };
-
   // Logout
   const logout = () => dispatch({ type: 'LOGOUT' });
 
