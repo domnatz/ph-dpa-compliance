@@ -13,35 +13,59 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
   
-  // Only allow POST for this endpoint
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
-  }
-  
   try {
+    // Connect to database
     await connectDB();
     
+    // Only allow POST for this endpoint
+    if (req.method !== 'POST') {
+      return res.status(405).json({ success: false, error: 'Method not allowed' });
+    }
+    
     const { name, email, password, company } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide name, email and password'
+      });
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'User with this email already exists'
+      });
+    }
     
     // Create user
     const user = await User.create({
       name,
       email,
       password,
-      company
+      company: company || 'Not specified'
     });
     
     // Generate token
     const token = user.getSignedJwtToken();
     
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
-      token
+      token,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
     });
   } catch (err) {
-    return res.status(400).json({
+    console.error('Registration error:', err);
+    return res.status(500).json({
       success: false,
-      error: err.message
+      error: err.message || 'Server error'
     });
   }
 };

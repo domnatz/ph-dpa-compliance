@@ -13,13 +13,14 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
   
-  // Only allow POST for this endpoint
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
-  }
-  
   try {
+    // Connect to database
     await connectDB();
+    
+    // Only allow POST for this endpoint
+    if (req.method !== 'POST') {
+      return res.status(405).json({ success: false, error: 'Method not allowed' });
+    }
     
     const { email, password } = req.body;
     
@@ -56,12 +57,19 @@ module.exports = async (req, res) => {
     
     return res.status(200).json({
       success: true,
-      token
+      token,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
     });
   } catch (err) {
+    console.error('Login error:', err);
     return res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: 'Server error',
+      message: err.message
     });
   }
 };
