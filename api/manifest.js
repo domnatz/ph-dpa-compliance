@@ -1,10 +1,10 @@
 module.exports = (req, res) => {
-  // Set headers with NO authentication requirements
+  // Public resource - no auth needed
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   
-  // Just return the manifest JSON directly
+  // Return manifest JSON with status 200 (not 401)
   return res.status(200).json({
     "short_name": "PhilDPA",
     "name": "PhilDPA Compliance Tool",

@@ -9,10 +9,16 @@
     { "source": "/api/users/register", "destination": "/api/users/register.js" },
     { "source": "/api/users/login", "destination": "/api/users/login.js" },
     { "source": "/api/users/me", "destination": "/api/users/me.js" },
+    { "source": "/api/login-test", "destination": "/api/login-test.js" },
     { "source": "/api/test", "destination": "/api/test.js" },
     { "source": "/api/db-test", "destination": "/api/db-test.js" },
     { "source": "/api", "destination": "/api/index.js" },
     { "source": "/manifest.json", "destination": "/api/manifest.js" },
     { "source": "/(.*)", "destination": "/" }
-  ]
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "JWT_SECRET": "@jwt_secret",
+    "JWT_EXPIRE": "30d"
+  }
 }

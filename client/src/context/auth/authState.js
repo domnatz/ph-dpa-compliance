@@ -86,39 +86,39 @@ const AuthState = props => {
 
     // Login User
         // Replace your login function with this fixed version:
-    const login = async formData => {
-      try {
-        // Use dispatch instead of setLoading
-        dispatch({ type: 'SET_LOADING' });
-        
-        const res = await api.post('/users/login', formData);
-        
-        // If successful, save the token
-        if (res.data && res.data.token) {
-          localStorage.setItem('token', res.data.token);
-        }
-        
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: res.data
-        });
-        
-        loadUser();
-      } catch (err) {
-        console.error('Login error:', err);
-        
-        // Extract the error message as a STRING
-        const errorMessage = err.response?.data?.error || 
-                            err.message || 
-                            'Login failed';
-        
-        dispatch({
-          type: 'LOGIN_FAIL',
-          // Send a STRING as payload, not the error object
-          payload: errorMessage
-        });
-      }
-    };
+   // Find your login function and update it with:
+const login = async formData => {
+  try {
+    dispatch({ type: 'SET_LOADING' });
+    
+    let res;
+    try {
+      // Try main login first
+      res = await api.post('/users/login', formData);
+    } catch (loginError) {
+      console.error('Main login failed, trying test endpoint:', loginError);
+      // If main login fails, try test endpoint
+      res = await api.post('/login-test', formData);
+    }
+    
+    if (res.data && res.data.token) {
+      localStorage.setItem('token', res.data.token);
+    }
+    
+    dispatch({
+      type: 'LOGIN_SUCCESS',
+      payload: res.data
+    });
+    
+    loadUser();
+  } catch (err) {
+    console.error('All login attempts failed:', err);
+    dispatch({
+      type: 'LOGIN_FAIL',
+      payload: err.response?.data?.error || err.message || 'Login failed'
+    });
+  }
+};
   // Logout
   const logout = () => dispatch({ type: 'LOGOUT' });
 

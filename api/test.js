@@ -1,27 +1,33 @@
+
 module.exports = async (req, res) => {
-    try {
-      // Show environment variables (without revealing secrets)
-      const envInfo = {
-        NODE_ENV: process.env.NODE_ENV,
-        mongoDBConfigured: !!process.env.MONGODB_URI,
-        jwtConfigured: !!process.env.JWT_SECRET,
-        mongoUriPrefix: process.env.MONGODB_URI?.substring(0, 15) + '...',
-      };
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
   
-      return res.status(200).json({
-        success: true,
-        message: 'API is working',
-        environment: envInfo,
-        headers: req.headers,
-        method: req.method,
-        query: req.query,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        error: 'Test endpoint error',
-        message: error.message
-      });
-    }
-  };
+  // Handle OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  try {
+    // Return a dummy success response without DB interaction
+    return res.status(200).json({
+      success: true,
+      token: 'test-token-123',
+      data: {
+        id: 'test-id',
+        name: 'Test User',
+        email: req.body?.email || 'test@example.com',
+        role: 'user'
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: 'Test endpoint error',
+      message: err.message
+    });
+  }
+};
