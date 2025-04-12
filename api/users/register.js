@@ -18,6 +18,7 @@ module.exports = async (req, res) => {
   try {
     // Connect to database
     await connectDB();
+    console.log('Connected to database for registration');
     
     // Only allow POST for this endpoint
     if (req.method !== 'POST') {
@@ -26,13 +27,26 @@ module.exports = async (req, res) => {
     
     console.log('Register request body:', req.body);
     
-    const { name, email, password, company } = req.body;
+    let { name, email, password, company } = req.body;
+    
+    // Normalize inputs
+    if (email) email = email.toLowerCase().trim();
+    if (name) name = name.trim();
+    if (company) company = company.trim();
     
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         error: 'Please provide name, email and password'
+      });
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters'
       });
     }
     
@@ -56,37 +70,51 @@ module.exports = async (req, res) => {
     }
     
     // Create user directly without relying on model methods
-    // Hash password
+    // Hash password consistently with the same approach
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    
+    console.log('Hashed password length:', hashedPassword.length);
     
     // Create user document
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      company: company || 'Not specified'
+      company: company || 'Not specified',
+      role: 'user', // Explicitly set role
+      lastLogin: new Date() // Set initial login time
     });
     
     console.log('User created successfully:', user._id);
     
     // Generate token manually
+    const secret = process.env.JWT_SECRET || 'defaultsecretkey';
+    const expiry = process.env.JWT_EXPIRE || '30d';
+    
+    console.log('Using JWT settings:', { 
+      secretLength: secret.length,
+      expiry 
+    });
+    
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET || 'defaultsecretkey',
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
+      secret,
+      { expiresIn: expiry }
     );
     
     // Return success response with improved format
+    // Do NOT include a redirect - let the client handle this
     return res.status(201).json({
       success: true,
-      message: 'Registration successful! Please log in.',
+      message: 'Registration successful',
       token,
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
-        company: user.company || 'Not specified'
+        company: user.company || 'Not specified',
+        role: user.role || 'user'
       }
     });
   } catch (err) {

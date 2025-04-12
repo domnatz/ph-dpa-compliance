@@ -79,11 +79,17 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Find user
+    // Find user - make sure to normalize email
     let user;
     try {
+      email = email.toLowerCase().trim();
+      console.log('Looking for user with email:', email);
       user = await User.findOne({ email }).select('+password');
       console.log('User found:', user ? 'Yes' : 'No');
+      if (user) {
+        console.log('User password exists:', !!user.password);
+        console.log('Password length:', user.password?.length);
+      }
     } catch (findError) {
       console.error('User lookup error:', findError);
       return res.status(500).json({
@@ -104,6 +110,15 @@ module.exports = async (req, res) => {
     let isMatch = false;
     try {
       console.log('Comparing passwords');
+      // Ensure password field was properly retrieved
+      if (!user.password) {
+        console.error('User password field is empty');
+        return res.status(500).json({
+          success: false,
+          error: 'User data is corrupt'
+        });
+      }
+      
       isMatch = await bcrypt.compare(password, user.password);
       console.log('Password match:', isMatch);
     } catch (bcryptError) {
@@ -122,14 +137,31 @@ module.exports = async (req, res) => {
       });
     }
     
+    // Update last login time
+    try {
+      user.lastLogin = new Date();
+      await user.save({ validateBeforeSave: false });
+    } catch (updateError) {
+      console.warn('Failed to update last login time:', updateError);
+      // Continue anyway, this is not critical
+    }
+    
     // Generate token
     let token;
     try {
       console.log('Generating token');
+      const secret = process.env.JWT_SECRET || 'fallbacksecretkey';
+      const expiry = process.env.JWT_EXPIRE || '30d';
+      
+      console.log('Using JWT settings:', { 
+        secretLength: secret.length,
+        expiry 
+      });
+      
       token = jwt.sign(
         { id: user._id },
-        process.env.JWT_SECRET || 'fallbacksecretkey',
-        { expiresIn: process.env.JWT_EXPIRE || '30d' }
+        secret,
+        { expiresIn: expiry }
       );
     } catch (jwtError) {
       console.error('Token generation error:', jwtError);
@@ -149,7 +181,8 @@ module.exports = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role || 'user'
+        role: user.role || 'user',
+        company: user.company
       }
     });
   } catch (err) {
