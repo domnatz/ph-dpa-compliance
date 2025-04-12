@@ -34,7 +34,15 @@ const taskByIdHandler = require('./api/assessments/taskbyId');
 
 // Define API routes explicitly
 app.post('/api/users/login', (req, res) => loginHandler(req, res));
-app.post('/api/users/register', (req, res) => registerHandler(req, res));
+
+// Enhanced registration route with improved logging
+app.post('/api/users/register', (req, res) => {
+  console.log('Processing registration request for:', req.body.email);
+  const result = registerHandler(req, res);
+  console.log('Registration request processed');
+  return result;
+});
+
 app.get('/api/users/me', (req, res) => meHandler(req, res));
 app.all('/api/assessments', (req, res) => assessmentsHandler(req, res));
 app.all('/api/assessments/tasks', (req, res) => taskHandler(req, res));
@@ -43,7 +51,7 @@ app.all('/api/assessments/tasks/:id', (req, res) => {
   return taskByIdHandler(req, res);
 });
 
-// Add the fallback login-test route
+// Add the fallback login-test route that client may be using
 app.post('/api/login-test', (req, res) => {
   console.log('Using login-test fallback route');
   return res.status(200).json({

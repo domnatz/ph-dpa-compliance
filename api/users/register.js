@@ -40,6 +40,7 @@ module.exports = async (req, res) => {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
+        console.log('User already exists:', email);
         return res.status(400).json({
           success: false,
           error: 'User with this email already exists'
@@ -67,6 +68,8 @@ module.exports = async (req, res) => {
       company: company || 'Not specified'
     });
     
+    console.log('User created successfully:', user._id);
+    
     // Generate token manually
     const token = jwt.sign(
       { id: user._id },
@@ -74,14 +77,16 @@ module.exports = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRE || '30d' }
     );
     
-    // Return success response
+    // Return success response with improved format
     return res.status(201).json({
       success: true,
+      message: 'Registration successful! Please log in.',
       token,
       data: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        company: user.company || 'Not specified'
       }
     });
   } catch (err) {
