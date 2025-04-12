@@ -1,4 +1,6 @@
 const User = require('../../models/userModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const connectDB = require('../../utils/db');
 
 module.exports = async (req, res) => {
@@ -14,19 +16,7 @@ module.exports = async (req, res) => {
   }
   
   try {
-    console.log('Login attempt, body:', req.body);
-    
-    // Check if request body exists and is not empty
-    if (!req.body || Object.keys(req.body).length === 0) {
-      console.error('Empty request body');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No request body provided' 
-      });
-    }
-    
-    // Connect to database
-    await connectDB();
+    console.log('Login attempt with body:', req.body);
     
     // Only allow POST for this endpoint
     if (req.method !== 'POST') {
@@ -43,18 +33,11 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Check for user (with try/catch)
-    let user;
-    try {
-      user = await User.findOne({ email }).select('+password');
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return res.status(500).json({
-        success: false,
-        error: 'Database error',
-        message: dbError.message
-      });
-    }
+    // Connect to database
+    await connectDB();
+    
+    // Check for user but don't rely on methods (manual password check)
+    const user = await User.findOne({ email }).select('+password');
     
     if (!user) {
       return res.status(401).json({
@@ -63,25 +46,17 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Check if matchPassword method exists
-    if (typeof user.matchPassword !== 'function') {
-      console.error('matchPassword method not found on user model');
-      return res.status(500).json({
-        success: false,
-        error: 'Internal server error'
-      });
-    }
-    
-    // Check if password matches
-    let isMatch;
+    // Check password manually with bcrypt
+    let isMatch = false;
     try {
-      isMatch = await user.matchPassword(password);
-    } catch (matchError) {
-      console.error('Password match error:', matchError);
+      isMatch = await bcrypt.compare(password, user.password);
+    } catch (err) {
+      console.error('Password comparison error:', err);
+      // If bcrypt.compare fails, provide a clear error
       return res.status(500).json({
         success: false,
-        error: 'Password verification error',
-        message: matchError.message
+        error: 'Password comparison failed',
+        debug: err.message
       });
     }
     
@@ -92,10 +67,14 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Generate token
-    const token = user.getSignedJwtToken();
+    // Generate token manually
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'defaultsecretkey123456789',
+      { expiresIn: process.env.JWT_EXPIRE || '30d' }
+    );
     
-    // Send back user data and token
+    // Return success with token and user data
     return res.status(200).json({
       success: true,
       token,

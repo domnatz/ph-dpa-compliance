@@ -32,14 +32,17 @@ const Register = () => {
   const { name, email, password, password2, company } = user;
 
   const onChange = e => setUser({ ...user, [e.target.name]: e.target.value });
-
+  
   const onSubmit = e => {
     e.preventDefault();
+    console.log('Submitting registration form:', { name, email, company });
+    
     if (name === '' || email === '' || password === '' || company === '') {
       alert('Please enter all fields');
     } else if (password !== password2) {
       alert('Passwords do not match');
     } else {
+      console.log('Calling register with data');
       register({
         name,
         email,
@@ -49,7 +52,6 @@ const Register = () => {
     }
   };
 
-  // Rest of your component...
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="privacy-card max-w-md w-full">

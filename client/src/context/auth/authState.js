@@ -79,35 +79,23 @@ const AuthState = props => {
       try {
         const res = await api.post('/users/login', formData);
         
-        console.log('Login response:', res.data);
-        
-        // Set token directly in localStorage first
-        if (res.data && res.data.token) {
-          localStorage.setItem('token', res.data.token);
-          console.log('Token saved to localStorage:', res.data.token.substring(0, 10) + '...');
-        }
-        
-        // Then dispatch to update state
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: res.data
         });
     
-        // Wait a moment before loading user to ensure token is set
-        setTimeout(() => {
-          loadUser();
-        }, 100);
+        loadUser();
       } catch (err) {
-        console.error('Login error:', err.response?.data || err.message);
+        console.error('Login error:', err);
         
-        // This is the key fix - use a proper string for the payload, not an object
+        // IMPORTANT: Create a string error message, not an object
         const errorMessage = err.response?.data?.error || 
                              err.message || 
-                             'Login failed';
-        
+                             'Authentication failed';
+                             
         dispatch({
           type: 'LOGIN_FAIL',
-          payload: errorMessage  // Send string, not object
+          payload: errorMessage // String, not object!
         });
       }
     };
