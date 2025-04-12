@@ -14,7 +14,7 @@ const TaskList = ({ tasks, onToggleTask }) => {
         Compliance Tasks
       </h2>
       
-      {tasks.length === 0 ? (
+      {!tasks || tasks.length === 0 ? (
         <div className="data-protection-box text-center py-4">
           <p className="text-gray-600">No tasks available. Complete the assessment to generate tasks.</p>
           <button 

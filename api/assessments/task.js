@@ -1,7 +1,12 @@
 const connectDB = require('../../utils/db');
 const { verifyToken } = require('../../utils/auth');
 const Task = require('../../models/taskModel');
-const Assessment = require('../../models/assessmentModel');
+const mongoose = require('mongoose');
+
+// Initialize storage for bypass user tasks if it doesn't exist
+if (!global.bypassUserTasks) {
+  global.bypassUserTasks = {};
+}
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -16,24 +21,44 @@ module.exports = async (req, res) => {
   }
   
   try {
+    console.log('Task API called:', {
+      method: req.method,
+      path: req.url,
+      query: req.query
+    });
+    
+    // Connect to the database
     await connectDB();
     
-    // Get token from header
-    let token;
-    
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
+    // Verify token and get user
+    const user = await verifyToken(req, res, () => {});
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized access' });
     }
     
-    // Verify token
-    const user = await verifyToken(token);
+    // Use the actual ID instead of creating a new ObjectId for bypass users
+    const userIdForQuery = user.isBypassUser 
+      ? user.id // Use the actual ID for bypass users
+      : user._id;
     
-    // GET method - get tasks
+    // Handle GET method - get tasks
     if (req.method === 'GET') {
-      const tasks = await Task.find({ user: user._id }).sort('createdAt');
+      if (user.isBypassUser) {
+        // Return mock tasks for bypass users from global storage
+        const userTasks = global.bypassUserTasks && global.bypassUserTasks[user.id] 
+          ? global.bypassUserTasks[user.id] 
+          : [];
+        
+        console.log(`Returning ${userTasks.length} bypass user tasks from memory`);
+        
+        return res.status(200).json({
+          success: true,
+          data: userTasks
+        });
+      }
+      
+      // Regular user flow - fetch tasks from database
+      const tasks = await Task.find({ user: userIdForQuery }).sort('-createdAt');
       
       return res.status(200).json({
         success: true,
@@ -41,82 +66,89 @@ module.exports = async (req, res) => {
       });
     }
     
-    // POST method - generate tasks based on assessment
+    // Handle POST method - toggle task completion
     if (req.method === 'POST') {
-      // Get latest assessment
-      const assessment = await Assessment.findOne({ user: user._id }).sort('-completedAt');
+      const { taskId, completed } = req.body;
       
-      if (!assessment) {
+      if (!taskId) {
         return res.status(400).json({
           success: false,
-          error: 'Complete an assessment first'
+          error: 'Please provide a taskId'
         });
       }
       
-      // Delete existing tasks
-      await Task.deleteMany({ user: user._id });
-      
-      // Define tasks based on assessment answers
-      const tasks = [];
-      
-      assessment.answers.forEach(answer => {
-        if (answer.questionId === 1 && answer.answer !== 'Yes') {
-          tasks.push({
-            user: user._id,
-            text: 'Appoint a Data Protection Officer (DPO)',
-            description: 'Designate a person within your organization responsible for ensuring compliance with the DPA.'
+      if (user.isBypassUser) {
+        // Update mock task for bypass users
+        if (!global.bypassUserTasks || !global.bypassUserTasks[user.id]) {
+          return res.status(404).json({
+            success: false,
+            error: 'No tasks found for this user'
           });
         }
         
-        if (answer.questionId === 2 && answer.answer !== 'Yes') {
-          tasks.push({
-            user: user._id,
-            text: 'Create a Privacy Notice',
-            description: 'Develop a comprehensive privacy notice that informs users about how their data is collected and used.'
+        // Find and update the bypass user task in memory
+        const taskIndex = global.bypassUserTasks[user.id].findIndex(task => task._id === taskId);
+        
+        if (taskIndex === -1) {
+          return res.status(404).json({
+            success: false,
+            error: 'Task not found'
           });
         }
         
-        if (answer.questionId === 3 && answer.answer !== 'Yes') {
-          tasks.push({
-            user: user._id,
-            text: 'Register with the National Privacy Commission',
-            description: 'Register your data processing systems with the NPC as required by the DPA.'
-          });
-        }
+        // Update the task completion status
+        global.bypassUserTasks[user.id][taskIndex].completed = completed !== false;
         
-        if (answer.questionId === 4 && answer.answer !== 'Yes') {
-          tasks.push({
-            user: user._id,
-            text: 'Establish Data Breach Notification Procedures',
-            description: 'Create protocols for notifying affected individuals and the NPC within 72 hours of discovering a breach.'
-          });
-        }
-        
-        if (answer.questionId === 5 && answer.answer !== 'Yes') {
-          tasks.push({
-            user: user._id,
-            text: 'Implement Consent Mechanisms',
-            description: 'Develop methods to obtain specific, informed consent before collecting personal data.'
-          });
-        }
-      });
+        return res.status(200).json({
+          success: true,
+          data: global.bypassUserTasks[user.id][taskIndex]
+        });
+      }
       
-      // Create tasks in database
-      const createdTasks = await Task.create(tasks);
+      // Regular user flow - update task in database
+      const task = await Task.findOneAndUpdate(
+        { _id: taskId, user: userIdForQuery },
+        { completed: completed !== false },
+        { new: true }
+      );
       
-      return res.status(201).json({
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          error: 'Task not found or not authorized to update'
+        });
+      }
+      
+      return res.status(200).json({
         success: true,
-        data: createdTasks
+        data: task
       });
     }
     
-    // If not GET or POST
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
+    // If the method is not GET or POST
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed',
+      method: req.method,
+      allowedMethods: ['GET', 'POST', 'OPTIONS']
+    });
     
   } catch (err) {
-    return res.status(401).json({
+    console.error('Task API error:', err.message, err.stack);
+    
+    // Handle specific errors
+    if (err.message === 'Invalid token' || err.message === 'User not found') {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to access this route'
+      });
+    }
+    
+    // Handle server errors
+    return res.status(500).json({
       success: false,
-      error: 'Not authorized to access this route'
+      error: 'Server error',
+      message: err.message
     });
   }
 };

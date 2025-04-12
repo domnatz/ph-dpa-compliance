@@ -8,6 +8,11 @@ if (!global.bypassUserAssessments) {
   global.bypassUserAssessments = {};
 }
 
+// Initialize storage for bypass user tasks
+if (!global.bypassUserTasks) {
+  global.bypassUserTasks = {};
+}
+
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -155,6 +160,55 @@ module.exports = async (req, res) => {
         }
         global.bypassUserAssessments[user.id] = bypassAssessment;
         
+        // Generate tasks based on answers
+        // Create tasks based on 'No' answers
+        const tasks = [];
+        
+        answers.forEach((answer, index) => {
+          const questionText = answer.question || `Question ${answer.questionId || (index + 1)}`;
+          
+          if (answer.answer === 'No') {
+            tasks.push({
+              _id: 'mock-task-no-' + Date.now() + '-' + index,
+              user: user.id,
+              text: `Implement ${questionText}`,
+              description: `You need to address this requirement to comply with regulations.`,
+              completed: false,
+              priority: 'high',
+              createdAt: new Date()
+            });
+          }
+          
+          if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
+            tasks.push({
+              _id: 'mock-task-partial-' + Date.now() + '-' + index,
+              user: user.id,
+              text: `Complete ${questionText} implementation`,
+              description: `You've started addressing this requirement but need to fully implement it.`,
+              completed: false,
+              priority: 'medium',
+              createdAt: new Date()
+            });
+          }
+        });
+        
+        // If no tasks were created but answers exist, create a default task
+        if (tasks.length === 0 && answers.length > 0) {
+          tasks.push({
+            _id: 'mock-task-default-' + Date.now(),
+            user: user.id,
+            text: 'Maintain compliance documentation',
+            description: 'Keep your privacy documentation up to date and review regularly.',
+            completed: false,
+            priority: 'low',
+            createdAt: new Date()
+          });
+        }
+        
+        // Store the tasks in global memory
+        global.bypassUserTasks[user.id] = tasks;
+        
+        console.log(`Stored ${tasks.length} bypass user tasks in memory`);
         console.log('Stored bypass user assessment in memory');
         
         return res.status(201).json({
