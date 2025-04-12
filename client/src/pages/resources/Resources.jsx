@@ -4,7 +4,7 @@ import api from '../../utils/api';
 const Resources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
   
   // Static resources with external website links instead of file downloads
   const staticResources = [
@@ -67,7 +67,7 @@ const Resources = () => {
     };
     
     fetchResources();
-  }, []);
+  }, [staticResources]);
   
   if (loading) {
     return <div className="text-center py-12">Loading resources...</div>;

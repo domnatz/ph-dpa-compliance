@@ -4,7 +4,7 @@ import AuthContext from '../../context/auth/authContext';
 
 const Navbar = () => {
   const authContext = useContext(AuthContext);
-  const { isAuthenticated, logout, user } = authContext;
+  const { isAuthenticated, logout} = authContext;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const onLogout = () => {

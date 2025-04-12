@@ -19,9 +19,10 @@ const Footer = () => {
           
           <div className="flex flex-col md:flex-row items-center">
             <div className="flex space-x-4 mb-3 md:mb-0 md:mr-6">
-              <a href="#" className="!text-white hover:underline transition-colors">Privacy Policy</a>
-              <a href="#" className="!text-white hover:underline transition-colors">Terms</a>
-              <a href="#" className="!text-white hover:underline transition-colors">Contact</a>
+              {/* Fixed invalid href attributes */}
+              <a href="/privacy" className="!text-white hover:underline transition-colors">Privacy Policy</a>
+              <a href="/terms" className="!text-white hover:underline transition-colors">Terms</a>
+              <a href="/contact" className="!text-white hover:underline transition-colors">Contact</a>
             </div>
             <div className="!text-white text-sm">
               &copy; {new Date().getFullYear()} domnatz. All rights reserved.
