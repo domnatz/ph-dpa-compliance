@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../utils/api';
 
 const Resources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
-
   
-  // Static resources with external website links instead of file downloads
-  const staticResources = [
+  // Wrap staticResources in useMemo to prevent recreation on every render
+  const staticResources = useMemo(() => [
     {
       _id: 'template1',
       title: 'Privacy Policy Guidelines',
@@ -50,7 +49,7 @@ const Resources = () => {
       category: 'form',
       externalUrl: 'https://www.privacy.gov.ph/registration-of-data-processing-systems/'
     }
-  ];
+  ], []); // Empty dependency array means this only runs once
   
   useEffect(() => {
     const fetchResources = async () => {
