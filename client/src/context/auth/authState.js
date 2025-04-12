@@ -51,25 +51,35 @@ const AuthState = props => {
   // Register User
   const register = async formData => {
     try {
-      const res = await api.post('/users/register', formData);
-  
-      dispatch({
-        type: 'REGISTER_SUCCESS',
-        payload: res.data
-      });
-  
-      loadUser();
-    } catch (err) {
-      console.error('Register error:', err.response?.data || err.message);
+      dispatch({ type: 'SET_LOADING' });
       
-      // Same fix here - use a string error message
+      // Log the request to help with debugging
+      console.log('Registering user:', { ...formData, password: '***' });
+      
+      const res = await api.post('/users/register', formData);
+      
+      console.log('Registration response:', res.data);
+      
+      if (res.data && res.data.token) {
+        dispatch({
+          type: 'REGISTER_SUCCESS',
+          payload: res.data
+        });
+        
+        // Load user after registration
+        loadUser();
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      
+      // Make sure to extract a STRING error message, not pass an object
       const errorMessage = err.response?.data?.error || 
-                           err.message || 
-                           'Registration failed';
+                          err.message || 
+                          'Registration failed';
       
       dispatch({
         type: 'REGISTER_FAIL',
-        payload: errorMessage  // Send string, not object
+        payload: errorMessage // This must be a string
       });
     }
   };

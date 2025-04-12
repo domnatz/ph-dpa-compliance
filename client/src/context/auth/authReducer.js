@@ -24,11 +24,20 @@ const authReducer = (state, action) => {
         error: null
       };
     case 'REGISTER_FAIL':
-      case 'SET_LOADING':
-  return {
-    ...state,
-    loading: true
-  };
+      storage.removeItem('token');
+      return {
+        ...state,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+        user: null,
+        error: action.payload
+      };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: true
+      };
     case 'AUTH_ERROR':
     case 'LOGIN_FAIL':
     case 'LOGOUT':
