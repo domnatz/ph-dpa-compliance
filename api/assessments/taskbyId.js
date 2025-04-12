@@ -33,18 +33,29 @@ module.exports = async (req, res) => {
   }
   
   try {
+    // Log request details for debugging
+    console.log('Task API called:', {
+      method: req.method,
+      url: req.url,
+      query: req.query,
+      body: req.body ? 'Has body' : 'No body'
+    });
+    
     // Connect to database first
     await connectDB();
     
     // For PUT requests to update task completion
     if (req.method === 'PUT') {
       // Get task ID - could be in query or params
-      const id = req.params?.id || req.query?.id;
+      const id = req.query?.id;
+      
+      console.log('Task ID from query:', id);
       
       if (!id) {
         return res.status(400).json({
           success: false,
-          error: 'Task ID is required'
+          error: 'Task ID is required',
+          query: req.query
         });
       }
       
@@ -60,7 +71,7 @@ module.exports = async (req, res) => {
       if (!token) {
         return res.status(401).json({
           success: false,
-          error: 'Not authorized'
+          error: 'Not authorized - no token provided'
         });
       }
       
@@ -77,7 +88,9 @@ module.exports = async (req, res) => {
       if (!task) {
         return res.status(404).json({
           success: false,
-          error: 'Task not found'
+          error: 'Task not found',
+          taskId: id,
+          userId: user._id
         });
       }
       
@@ -90,14 +103,27 @@ module.exports = async (req, res) => {
       res.setHeader('Allow', ['PUT', 'OPTIONS']);
       return res.status(405).json({
         success: false,
-        error: `Method ${req.method} not allowed`
+        error: `Method ${req.method} not allowed`,
+        allowedMethods: ['PUT', 'OPTIONS']
       });
     }
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Task API error:', error.message, error.stack);
+    
+    // Different status code for different errors
+    if (error.message === 'Invalid token' || error.message === 'User not found') {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication failed',
+        message: error.message
+      });
+    }
+    
     return res.status(500).json({
       success: false, 
-      error: 'Server error'
+      error: 'Server error',
+      message: error.message,
+      requestUrl: req.url
     });
   }
 };

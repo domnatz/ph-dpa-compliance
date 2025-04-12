@@ -15,6 +15,15 @@ module.exports = async (req, res) => {
   }
   
   try {
+    // Log request details for debugging
+    console.log('Assessment API called:', {
+      method: req.method,
+      path: req.url,
+      headers: {
+        authorization: req.headers.authorization ? 'Bearer [hidden]' : 'None'
+      }
+    });
+    
     await connectDB();
     
     // Get token from header
@@ -25,6 +34,13 @@ module.exports = async (req, res) => {
       req.headers.authorization.startsWith('Bearer')
     ) {
       token = req.headers.authorization.split(' ')[1];
+    }
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided, authorization denied'
+      });
     }
     
     // Verify token
@@ -43,6 +59,13 @@ module.exports = async (req, res) => {
     // POST method - create new assessment
     if (req.method === 'POST') {
       const { answers } = req.body;
+      
+      if (!answers || !Array.isArray(answers)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please provide answers array'
+        });
+      }
       
       // Calculate score (simplified version)
       let score = 0;
@@ -72,12 +95,28 @@ module.exports = async (req, res) => {
     }
     
     // If not GET or POST
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed',
+      method: req.method,
+      allowedMethods: ['GET', 'POST', 'OPTIONS']
+    });
     
   } catch (err) {
-    return res.status(401).json({
+    console.error('Assessment API error:', err.message, err.stack);
+    
+    // Proper error handling for different types of errors
+    if (err.message === 'Invalid token' || err.message === 'User not found') {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to access this route'
+      });
+    }
+    
+    return res.status(500).json({
       success: false,
-      error: 'Not authorized to access this route'
+      error: 'Server error',
+      message: err.message
     });
   }
 };

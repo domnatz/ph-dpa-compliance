@@ -13,6 +13,10 @@
   ],
   "routes": [
     {
+      "src": "/api",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/api/assessments/tasks/(.*)",
       "dest": "/api/assessments/taskbyId.js?id=$1"
     },
@@ -37,11 +41,7 @@
       "dest": "/api/users/me.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.js"
-    },
-    {
-      "src": "^/static/(.*)",
+      "src": "/static/(.*)",
       "dest": "/client/build/static/$1"
     },
     {
