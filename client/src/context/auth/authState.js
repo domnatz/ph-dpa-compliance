@@ -17,34 +17,32 @@ const AuthState = props => {
 
   // Load User
   const loadUser = async () => {
-    // Get token directly from localStorage for this call
     const token = localStorage.getItem('token');
-    
     if (!token) {
-      console.log('loadUser: No token in localStorage');
+      console.log('No token found in storage');
       dispatch({ type: 'AUTH_ERROR' });
       return;
     }
-    
-    console.log('loadUser: Using token', token.substring(0, 10) + '...');
-    
+  
     try {
-      // Force Authorization header for this specific request
+      // Try regular /me endpoint
       const res = await api.get('/users/me', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log('User loaded successfully:', res.data);
-      
-      dispatch({
-        type: 'USER_LOADED',
-        payload: res.data.data
-      });
+      dispatch({ type: 'USER_LOADED', payload: res.data.data });
     } catch (err) {
-      console.error('Error loading user:', err.response?.data || err.message);
-      dispatch({ type: 'AUTH_ERROR' });
+      console.error('Error loading user from /me:', err);
+  
+      // If regular /me fails, try bypass-me
+      try {
+        const bypassRes = await api.get('/users/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        dispatch({ type: 'USER_LOADED', payload: bypassRes.data.data });
+      } catch (bypassErr) {
+        console.error('Error loading user from bypass-me:', bypassErr);
+        dispatch({ type: 'AUTH_ERROR' });
+      }
     }
   };
 
