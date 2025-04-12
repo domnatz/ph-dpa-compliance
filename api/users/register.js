@@ -1,5 +1,7 @@
 const User = require('../../models/userModel');
 const connectDB = require('../../utils/db');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -22,6 +24,8 @@ module.exports = async (req, res) => {
       return res.status(405).json({ success: false, error: 'Method not allowed' });
     }
     
+    console.log('Register request body:', req.body);
+    
     const { name, email, password, company } = req.body;
     
     // Validate required fields
@@ -32,26 +36,45 @@ module.exports = async (req, res) => {
       });
     }
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'User with this email already exists'
+    // Check if user already exists - with proper error handling
+    try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          error: 'User with this email already exists'
+        });
+      }
+    } catch (dbError) {
+      console.error('Database search error:', dbError);
+      return res.status(500).json({
+        success: false, 
+        error: 'Database error during user lookup',
+        details: dbError.message
       });
     }
     
-    // Create user
+    // Create user directly without relying on model methods
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Create user document
     const user = await User.create({
       name,
       email,
-      password,
+      password: hashedPassword,
       company: company || 'Not specified'
     });
     
-    // Generate token
-    const token = user.getSignedJwtToken();
+    // Generate token manually
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'defaultsecretkey',
+      { expiresIn: process.env.JWT_EXPIRE || '30d' }
+    );
     
+    // Return success response
     return res.status(201).json({
       success: true,
       token,
@@ -65,7 +88,8 @@ module.exports = async (req, res) => {
     console.error('Registration error:', err);
     return res.status(500).json({
       success: false,
-      error: err.message || 'Server error'
+      error: 'Server error',
+      message: err.message
     });
   }
 };

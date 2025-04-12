@@ -1,6 +1,6 @@
 const User = require('../../models/userModel');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const connectDB = require('../../utils/db');
 
 module.exports = async (req, res) => {
@@ -16,11 +16,19 @@ module.exports = async (req, res) => {
   }
   
   try {
-    console.log('Login attempt with body:', req.body);
+    console.log('Login attempt with body:', JSON.stringify(req.body));
     
     // Only allow POST for this endpoint
     if (req.method !== 'POST') {
       return res.status(405).json({ success: false, error: 'Method not allowed' });
+    }
+    
+    // Check if body is present and properly parsed
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid request body' 
+      });
     }
     
     const { email, password } = req.body;
@@ -36,55 +44,53 @@ module.exports = async (req, res) => {
     // Connect to database
     await connectDB();
     
-    // Check for user but don't rely on methods (manual password check)
-    const user = await User.findOne({ email }).select('+password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-    
-    // Check password manually with bcrypt
-    let isMatch = false;
     try {
-      isMatch = await bcrypt.compare(password, user.password);
-    } catch (err) {
-      console.error('Password comparison error:', err);
-      // If bcrypt.compare fails, provide a clear error
+      // Find user by email with error trapping
+      const user = await User.findOne({ email }).select('+password');
+      
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials'
+        });
+      }
+      
+      // Use bcrypt directly instead of model method
+      const isMatch = await bcrypt.compare(password, user.password);
+      
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials'
+        });
+      }
+      
+      // Generate JWT token directly
+      const token = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET || 'defaultsecret12345',
+        { expiresIn: process.env.JWT_EXPIRE || '30d' }
+      );
+      
+      // Return success with user data
+      return res.status(200).json({
+        success: true,
+        token,
+        data: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role || 'user'
+        }
+      });
+    } catch (dbError) {
+      console.error('Database error:', dbError);
       return res.status(500).json({
         success: false,
-        error: 'Password comparison failed',
-        debug: err.message
+        error: 'Database error',
+        message: dbError.message
       });
     }
-    
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-    
-    // Generate token manually
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || 'defaultsecretkey123456789',
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
-    );
-    
-    // Return success with token and user data
-    return res.status(200).json({
-      success: true,
-      token,
-      data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({

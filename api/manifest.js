@@ -1,10 +1,11 @@
 module.exports = (req, res) => {
-  // Set appropriate headers
+  // Fix CORS and content type headers
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
   
-  // Return the manifest JSON
-  res.status(200).json({
+  // No authentication checks for manifest file
+  return res.status(200).json({
     "short_name": "React App",
     "name": "Create React App Sample",
     "icons": [
