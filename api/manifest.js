@@ -1,13 +1,13 @@
 module.exports = (req, res) => {
-  // Fix CORS and content type headers
+  // Set headers with NO authentication requirements
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   
-  // No authentication checks for manifest file
+  // Just return the manifest JSON directly
   return res.status(200).json({
-    "short_name": "React App",
-    "name": "Create React App Sample",
+    "short_name": "PhilDPA",
+    "name": "PhilDPA Compliance Tool",
     "icons": [
       {
         "src": "favicon.ico",
