@@ -1,14 +1,9 @@
 const connectDB = require('../../utils/db');
 const { verifyToken } = require('../../utils/auth');
-const Assessment = require('../../models/assessmentModel');
+const Task = require('../../models/taskModel');
 const mongoose = require('mongoose');
 
-// Initialize global storage for bypass users if it doesn't exist
-if (!global.bypassUserAssessments) {
-  global.bypassUserAssessments = {};
-}
-
-// Initialize storage for bypass user tasks
+// Initialize storage for bypass user tasks if it doesn't exist
 if (!global.bypassUserTasks) {
   global.bypassUserTasks = {};
 }
@@ -26,14 +21,11 @@ module.exports = async (req, res) => {
   }
   
   try {
-    // Log request details for debugging
-    console.log('Assessment API called:', {
+    console.log('Task API called:', {
       method: req.method,
       path: req.url,
-      query: req.query, // Log query params
-      headers: {
-        authorization: req.headers.authorization ? 'Bearer [hidden]' : 'None'
-      }
+      query: req.query,
+      body: req.method === 'POST' ? req.body : null // Log the request body for POST
     });
     
     // Connect to the database
@@ -50,173 +42,101 @@ module.exports = async (req, res) => {
       ? user.id // Use the actual ID for bypass users
       : user._id;
     
-    console.log(`User accessing assessments: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
+    console.log(`User accessing tasks: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
     
-    // Handle GET method - get the latest assessment or return mock data for bypass
+    // Handle GET method - get tasks
     if (req.method === 'GET') {
-      // Check if we should force a new assessment (for "Take Assessment" button)
-      if (req.query.new === 'true') {
-        console.log('New assessment requested - returning 404 to trigger assessment flow');
-        return res.status(404).json({
+      if (user.isBypassUser) {
+        // Return mock tasks for bypass users from global storage
+        const userTasks = global.bypassUserTasks && global.bypassUserTasks[user.id] 
+          ? global.bypassUserTasks[user.id] 
+          : [];
+        
+        console.log(`Returning ${userTasks.length} bypass user tasks from memory`);
+        
+        return res.status(200).json({
+          success: true,
+          data: userTasks
+        });
+      }
+      
+      // Regular user flow - fetch tasks from database
+      const tasks = await Task.find({ user: userIdForQuery }).sort('-createdAt');
+      
+      return res.status(200).json({
+        success: true,
+        data: tasks
+      });
+    }
+    
+    // Handle POST method - toggle task completion
+    if (req.method === 'POST') {
+      const { taskId, completed } = req.body;
+      
+      console.log('Task update request received:', { taskId, completed });
+      
+      if (!taskId) {
+        return res.status(400).json({
           success: false,
-          error: 'No assessments found for this user',
-          shouldStartNew: true
+          error: 'Please provide a taskId'
         });
       }
       
       if (user.isBypassUser) {
-        // Check if user has already submitted an assessment (stored in memory/session)
-        const hasSubmittedAssessment = global.bypassUserAssessments && 
-                                      global.bypassUserAssessments[user.id];
-        
-        if (!hasSubmittedAssessment) {
-          // No previous assessment - trigger new assessment flow
-          console.log('No previous assessment for bypass user - triggering new assessment');
+        // Update mock task for bypass users
+        if (!global.bypassUserTasks || !global.bypassUserTasks[user.id]) {
+          console.log('No bypass tasks found for user:', user.id);
           return res.status(404).json({
             success: false,
-            error: 'No assessments found for this user',
-            shouldStartNew: true
+            error: 'No tasks found for this user'
           });
         }
         
-        // Return previously submitted assessment for bypass user
-        console.log('Returning previously submitted assessment for bypass user');
+        console.log('Looking for task ID:', taskId);
+        console.log('Available task IDs:', global.bypassUserTasks[user.id].map(t => t._id));
+        
+        // Find and update the bypass user task in memory - using string comparison for IDs
+        const taskIndex = global.bypassUserTasks[user.id].findIndex(task => 
+          String(task._id) === String(taskId)
+        );
+        
+        if (taskIndex === -1) {
+          console.log('Task not found in bypass user tasks');
+          return res.status(404).json({
+            success: false,
+            error: 'Task not found'
+          });
+        }
+        
+        // Update the task completion status
+        const newCompleted = completed !== false;
+        console.log(`Updating task ${taskId} to completed=${newCompleted}`);
+        global.bypassUserTasks[user.id][taskIndex].completed = newCompleted;
+        
+        // Return the updated task
         return res.status(200).json({
           success: true,
-          data: global.bypassUserAssessments[user.id]
+          data: global.bypassUserTasks[user.id][taskIndex]
         });
       }
       
-      // Regular user flow - fetch from database
-      const assessment = await Assessment.findOne({ user: userIdForQuery }).sort('-completedAt');
+      // Regular user flow - update task in database
+      const task = await Task.findOneAndUpdate(
+        { _id: taskId, user: userIdForQuery },
+        { completed: completed !== false },
+        { new: true }
+      );
       
-      if (!assessment) {
+      if (!task) {
         return res.status(404).json({
           success: false,
-          error: 'No assessments found for this user',
-          shouldStartNew: true
+          error: 'Task not found or not authorized to update'
         });
       }
       
       return res.status(200).json({
         success: true,
-        data: assessment
-      });
-    }
-    
-    // Handle POST method - create a new assessment
-    if (req.method === 'POST') {
-      const { answers } = req.body;
-      
-      // Log received answers to debug
-      console.log('Received answers for scoring:', JSON.stringify(answers));
-      
-      if (!answers || !Array.isArray(answers)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Please provide a valid answers array'
-        });
-      }
-      
-      // Calculate score correctly - start at 0 and calculate percentage
-      let score = 0;
-      const possiblePoints = answers.length * 20; // Maximum possible points
-      
-      // Log each answer and its contribution to score
-      answers.forEach((answer, index) => {
-        console.log(`Processing answer ${index + 1}: ${answer.questionId} - ${answer.answer}`);
-        
-        if (answer.answer === 'Yes') {
-          score += 20; // Full points
-          console.log(`  Added 20 points for 'Yes', total now: ${score}`);
-        } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
-          score += 10; // Half points
-          console.log(`  Added 10 points for '${answer.answer}', total now: ${score}`);
-        } else {
-          // No points for other answers
-          console.log(`  Added 0 points for '${answer.answer}', total still: ${score}`);
-        }
-      });
-      
-      // Calculate score as percentage of possible points
-      const finalScore = Math.round((score / possiblePoints) * 100);
-      
-      console.log(`Final assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
-      
-      if (user.isBypassUser) {
-        // For bypass users, store the assessment in memory and return it
-        const bypassAssessment = {
-          _id: 'mock-assessment-' + Date.now(),
-          user: user.id,
-          answers: answers,
-          score: finalScore,
-          completedAt: new Date(),
-          isBypassData: true
-        };
-        
-        // Store assessment for future GET requests
-        if (!global.bypassUserAssessments) {
-          global.bypassUserAssessments = {};
-        }
-        global.bypassUserAssessments[user.id] = bypassAssessment;
-        
-        // Generate tasks based on answers
-        // Create tasks based on 'No' and 'Partially' answers only
-        const tasks = [];
-        let hasNonComplianceAnswers = false;
-        
-        answers.forEach((answer, index) => {
-          const questionText = answer.question || `Question ${answer.questionId || (index + 1)}`;
-          
-          if (answer.answer === 'No') {
-            hasNonComplianceAnswers = true;
-            tasks.push({
-              _id: 'mock-task-no-' + Date.now() + '-' + index,
-              user: user.id,
-              text: `Implement ${questionText}`,
-              description: `You need to address this requirement to comply with regulations.`,
-              completed: false,
-              priority: 'high',
-              createdAt: new Date()
-            });
-          }
-          
-          if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
-            hasNonComplianceAnswers = true;
-            tasks.push({
-              _id: 'mock-task-partial-' + Date.now() + '-' + index,
-              user: user.id,
-              text: `Complete ${questionText} implementation`,
-              description: `You've started addressing this requirement but need to fully implement it.`,
-              completed: false,
-              priority: 'medium',
-              createdAt: new Date()
-            });
-          }
-        });
-        
-        // Store the tasks in global memory (even if empty)
-        global.bypassUserTasks[user.id] = tasks;
-        
-        console.log(`Stored ${tasks.length} bypass user tasks in memory`);
-        console.log(`Has non-compliance answers: ${hasNonComplianceAnswers}`);
-        
-        return res.status(201).json({
-          success: true,
-          data: bypassAssessment
-        });
-      }
-      
-      // Create a new assessment for regular users
-      const assessment = await Assessment.create({
-        user: userIdForQuery,
-        answers,
-        score: finalScore
-      });
-      
-      return res.status(201).json({
-        success: true,
-        data: assessment
+        data: task
       });
     }
     
@@ -229,7 +149,7 @@ module.exports = async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Assessment API error:', err.message, err.stack);
+    console.error('Task API error:', err.message, err.stack);
     
     // Handle specific errors
     if (err.message === 'Invalid token' || err.message === 'User not found') {

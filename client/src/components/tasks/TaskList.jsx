@@ -1,95 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../utils/api';
-import TaskItem from './TaskItem';
 
-const TaskList = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/tasks');
-      setTasks(res.data.data || []);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching tasks:', err);
-      setError('Failed to load tasks. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
+const TaskList = ({ tasks, onToggleTask }) => {
+  // Function to handle take assessment button click
+  const handleTakeAssessment = (e) => {
+    e.preventDefault();
+    window.location.href = '/assessment?new=true';
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  if (loading) {
-    return <div className="text-center py-4">Loading tasks...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        {error}
-      </div>
-    );
-  }
-
-  // Function to generate sample tasks if none exist
-  const generateSampleTasks = async () => {
-    try {
-      setLoading(true);
-      await api.post('/tasks/generate');
-      fetchTasks();
-    } catch (error) {
-      console.error('Error generating tasks:', error);
-      setError('Failed to generate tasks');
-      setLoading(false);
-    }
+  // Function to handle checkbox click with proper event handling
+  const handleToggleTask = (taskId) => {
+    console.log('Toggling task with ID:', taskId);
+    onToggleTask(taskId);
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Compliance Tasks</h2>
-        {tasks.length === 0 && (
+    <div className="privacy-card-compliance rounded-lg p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--privacy-teal)' }}>
+        Compliance Tasks
+      </h2>
+      
+      {!tasks || tasks.length === 0 ? (
+        <div className="data-protection-box text-center py-4">
+          <p className="text-gray-600">No tasks available. Complete the assessment to generate tasks.</p>
           <button 
-            onClick={generateSampleTasks}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition"
+            className="btn-compliance mt-3"
+            onClick={handleTakeAssessment}
           >
-            Generate Tasks
+            Take Assessment
           </button>
-        )}
-      </div>
-
-      {tasks.length > 0 ? (
-        <div className="space-y-4">
-          {tasks.map(task => (
-            <TaskItem 
-              key={task._id} 
-              task={task} 
-              refreshTasks={fetchTasks}
-            />
-          ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-lg mb-4">No tasks available. Generate tasks or complete an assessment.</p>
-          <div className="flex space-x-4 justify-center">
-            <button
-              onClick={generateSampleTasks}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition"
-            >
-              Generate Sample Tasks
-            </button>
-            <Link to="/assessment" className="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-dark transition">
-              Take Assessment
-            </Link>
-          </div>
-        </div>
+        <ul className="space-y-4">
+          {tasks.map((task) => (
+            <li key={task._id} className="flex items-start p-3 rounded-md hover:bg-gray-50 transition-colors">
+              <div className="flex-shrink-0 mt-1 mr-3">
+                <div
+                  onClick={() => handleToggleTask(task._id)}
+                  className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center ${
+                    task.completed 
+                      ? 'bg-blue-500 border-blue-500' 
+                      : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {task.completed && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className={`font-medium ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                  {task.text}
+                </p>
+                <p className={`text-sm mt-1 ${task.completed ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {task.description}
+                </p>
+                {!task.completed && (
+                  <span className="compliance-badge text-xs mt-2">Required for Compliance</span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
