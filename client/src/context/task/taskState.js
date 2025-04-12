@@ -21,12 +21,16 @@ const TaskState = (props) => {
   // Get all tasks
   const getTasks = async () => {
     try {
+      console.log('Fetching tasks...');
       const res = await axios.get('/api/assessments/task');
+      console.log('Tasks fetched:', res.data.data);
+
       dispatch({
         type: GET_TASKS,
         payload: res.data.data,
       });
     } catch (err) {
+      console.error('Error fetching tasks:', err.response?.data || err.message);
       dispatch({
         type: TASK_ERROR,
         payload: err.response?.data?.error || 'Error fetching tasks',
@@ -37,22 +41,30 @@ const TaskState = (props) => {
   // Toggle task completion status
   const toggleTask = async (taskId) => {
     try {
+      console.log(`Toggling task completion for task ID: ${taskId}`);
+
+      // Find the current task in the state
       const currentTask = state.tasks.find((task) => String(task._id) === String(taskId));
       if (!currentTask) {
         console.error(`Task with ID ${taskId} not found in state`);
         return;
       }
 
+      // Send request to toggle completion status
       const res = await axios.post('/api/assessments/task', {
         taskId,
         completed: !currentTask.completed,
       });
 
+      console.log('Task toggle response:', res.data);
+
+      // Update the state with the updated task
       dispatch({
         type: UPDATE_TASK,
         payload: res.data.data,
       });
     } catch (err) {
+      console.error('Error toggling task:', err.response?.data || err.message);
       dispatch({
         type: TASK_ERROR,
         payload: err.response?.data?.error || 'Error updating task',
@@ -61,7 +73,10 @@ const TaskState = (props) => {
   };
 
   // Clear errors
-  const clearErrors = () => dispatch({ type: CLEAR_ERRORS });
+  const clearErrors = () => {
+    console.log('Clearing errors...');
+    dispatch({ type: CLEAR_ERRORS });
+  };
 
   return (
     <TaskContext.Provider

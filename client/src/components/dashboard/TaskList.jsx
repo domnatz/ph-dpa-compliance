@@ -1,11 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const TaskList = ({ tasks, onToggleTask }) => {
-  // Function to handle checkbox click with proper event handling
-  const handleToggleTask = (taskId, e) => {
-    // Prevent the event from propagating to parent elements
-    if (e) e.stopPropagation();
+  // Function to handle take assessment button click
+  const handleTakeAssessment = (e) => {
+    e.preventDefault();
+    window.location.href = '/assessment?new=true';
+  };
 
+  // Function to handle checkbox click with proper event handling
+  const handleToggleTask = (taskId) => {
     console.log('Toggling task with ID:', taskId);
     onToggleTask(taskId);
   };
@@ -15,10 +19,16 @@ const TaskList = ({ tasks, onToggleTask }) => {
       <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--privacy-teal)' }}>
         Compliance Tasks
       </h2>
-
+      
       {!tasks || tasks.length === 0 ? (
         <div className="data-protection-box text-center py-4">
           <p className="text-gray-600">No tasks available. Complete the assessment to generate tasks.</p>
+          <button 
+            className="btn-compliance mt-3"
+            onClick={handleTakeAssessment}
+          >
+            Take Assessment
+          </button>
         </div>
       ) : (
         <ul className="space-y-4">
@@ -26,10 +36,10 @@ const TaskList = ({ tasks, onToggleTask }) => {
             <li key={task._id} className="flex items-start p-3 rounded-md hover:bg-gray-50 transition-colors">
               <div className="flex-shrink-0 mt-1 mr-3">
                 <div
-                  onClick={(e) => handleToggleTask(task._id, e)}
+                  onClick={() => handleToggleTask(task._id)}
                   className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center ${
-                    task.completed
-                      ? 'bg-blue-500 border-blue-500'
+                    task.completed 
+                      ? 'bg-blue-500 border-blue-500' 
                       : 'border-gray-300 hover:border-blue-400'
                   }`}
                 >
@@ -47,6 +57,9 @@ const TaskList = ({ tasks, onToggleTask }) => {
                 <p className={`text-sm mt-1 ${task.completed ? 'text-gray-400' : 'text-gray-600'}`}>
                   {task.description}
                 </p>
+                {!task.completed && (
+                  <span className="compliance-badge text-xs mt-2">Required for Compliance</span>
+                )}
               </div>
             </li>
           ))}
