@@ -1,67 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "build" }
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node",
-      "config": {
-        "runtime": "nodejs18.x"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/assessments/tasks/(.*)",
-      "dest": "/api/assessments/taskbyId.js?id=$1"
-    },
-    {
-      "src": "/api/assessments/tasks",
-      "dest": "/api/assessments/task.js"
-    },
-    {
-      "src": "/api/assessments",
-      "dest": "/api/assessments/index.js"
-    },
-    {
-      "src": "/api/users/register",
-      "dest": "/api/users/register.js"
-    },
-    {
-      "src": "/api/users/login",
-      "dest": "/api/users/login.js"
-    },
-    {
-      "src": "/api/users/me",
-      "dest": "/api/users/me.js"
-    },
-    {
-      "src": "/api",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/client/build/static/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/client/build/index.html"
-    },
-    {
-      "src": "/(.*)\\.(.+)",
-      "dest": "/client/build/$1.$2"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/build/index.html"
-    }
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "client/build",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1.js" },
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
