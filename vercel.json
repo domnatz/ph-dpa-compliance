@@ -5,36 +5,12 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "build" }
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/assessments/tasks/(.*)",
-      "dest": "/api/assessments/tasks[id].js?id=$1"
-    },
-    {
-      "src": "/api/assessments/tasks",
-      "dest": "/api/assessments/task.js"
-    },
-    {
-      "src": "/api/assessments",
-      "dest": "/api/assessments/index.js"
-    },
-    {
-      "src": "/api/users/register",
-      "dest": "/api/users/register.js"
-    },
-    {
-      "src": "/api/users/login",
-      "dest": "/api/users/login.js"
-    },
-    {
-      "src": "/api/users/me",
-      "dest": "/api/users/me.js"
+      "src": "/api/test",
+      "dest": "/api/test.js"
     },
     {
       "src": "/static/(.*)",
@@ -47,15 +23,6 @@
     {
       "src": "/(.*)",
       "dest": "/client/build/index.html"
-    },
-    {
-      "src": "/api/test",
-      "dest": "/api/test.js"
     }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "JWT_EXPIRE": "30d"
-  }
+  ]
 }
