@@ -2,14 +2,13 @@
   "name": "phildpa-compliance",
   "version": "1.0.0",
   "description": "Philippine Data Privacy Act Compliance Application",
-  "main": "dev-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node dev-server.js",
-    "dev": "nodemon dev-server.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "client": "cd client && npm start",
     "dev:all": "concurrently \"npm run dev\" \"npm run client\"",
-    "build": "cd client && npm install && npm run build",
-    "vercel-build": "cd client && npm install && npm run build"
+    "build": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "cors": "^2.8.5",
