@@ -23,16 +23,39 @@ app.use((req, res, next) => {
   next();
 });
 
-// Import API handlers
-const apiHandler = require('./api/index');
+// Import API handlers directly
+const loginHandler = require('./api/users/login');
+const registerHandler = require('./api/users/register');
+const meHandler = require('./api/users/me');
 const manifestHandler = require('./api/manifest');
+const assessmentsHandler = require('./api/assessments/index');
+const taskHandler = require('./api/assessments/task');
+const taskByIdHandler = require('./api/assessments/taskbyId');
 
-// API routes
-app.use('/api', (req, res) => {
-  // Simulate the URL structure expected by your handler
-  const originalUrl = req.originalUrl;
-  req.url = originalUrl.replace('/api', '');
-  return apiHandler(req, res);
+// Define API routes explicitly
+app.post('/api/users/login', (req, res) => loginHandler(req, res));
+app.post('/api/users/register', (req, res) => registerHandler(req, res));
+app.get('/api/users/me', (req, res) => meHandler(req, res));
+app.all('/api/assessments', (req, res) => assessmentsHandler(req, res));
+app.all('/api/assessments/tasks', (req, res) => taskHandler(req, res));
+app.all('/api/assessments/tasks/:id', (req, res) => {
+  req.query = { ...req.query, id: req.params.id };
+  return taskByIdHandler(req, res);
+});
+
+// Add the fallback login-test route
+app.post('/api/login-test', (req, res) => {
+  console.log('Using login-test fallback route');
+  return res.status(200).json({
+    success: true,
+    token: 'test-token-123',
+    data: {
+      id: 'test-id',
+      name: 'Test User',
+      email: req.body?.email || 'test@example.com',
+      role: 'user'
+    }
+  });
 });
 
 app.get('/manifest.json', (req, res) => manifestHandler(req, res));
