@@ -3,6 +3,11 @@ const { verifyToken } = require('../../utils/auth');
 const Assessment = require('../../models/assessmentModel');
 const mongoose = require('mongoose');
 
+// Initialize global storage for bypass users if it doesn't exist
+if (!global.bypassUserAssessments) {
+  global.bypassUserAssessments = {};
+}
+
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -20,6 +25,7 @@ module.exports = async (req, res) => {
     console.log('Assessment API called:', {
       method: req.method,
       path: req.url,
+      query: req.query, // Log query params
       headers: {
         authorization: req.headers.authorization ? 'Bearer [hidden]' : 'None'
       }
@@ -43,25 +49,36 @@ module.exports = async (req, res) => {
     
     // Handle GET method - get the latest assessment or return mock data for bypass
     if (req.method === 'GET') {
+      // Check if we should force a new assessment (for "Take Assessment" button)
+      if (req.query.new === 'true') {
+        console.log('New assessment requested - returning 404 to trigger assessment flow');
+        return res.status(404).json({
+          success: false,
+          error: 'No assessments found for this user',
+          shouldStartNew: true
+        });
+      }
+      
       if (user.isBypassUser) {
-        // Return mock assessment data for bypass users
+        // Check if user has already submitted an assessment (stored in memory/session)
+        const hasSubmittedAssessment = global.bypassUserAssessments && 
+                                      global.bypassUserAssessments[user.id];
+        
+        if (!hasSubmittedAssessment) {
+          // No previous assessment - trigger new assessment flow
+          console.log('No previous assessment for bypass user - triggering new assessment');
+          return res.status(404).json({
+            success: false,
+            error: 'No assessments found for this user',
+            shouldStartNew: true
+          });
+        }
+        
+        // Return previously submitted assessment for bypass user
+        console.log('Returning previously submitted assessment for bypass user');
         return res.status(200).json({
           success: true,
-          data: {
-            _id: 'mock-assessment-123',
-            user: user.id || user._id,
-            title: 'Sample Assessment',
-            score: 0, // Start at 0 by default
-            completedAt: new Date(),
-            answers: [
-              { question: 'Data Protection Policy', answer: 'Yes', comments: 'Implemented fully' },
-              { question: 'Data Breach Response', answer: 'Partially', comments: 'In progress' },
-              { question: 'User Consent Mechanisms', answer: 'Yes', comments: 'Deployed across all systems' },
-              { question: 'Employee Training', answer: 'No', comments: 'Not started' },
-              { question: 'Data Access Controls', answer: 'Yes', comments: 'Implemented' }
-            ],
-            isBypassData: true
-          }
+          data: global.bypassUserAssessments[user.id]
         });
       }
       
@@ -71,7 +88,8 @@ module.exports = async (req, res) => {
       if (!assessment) {
         return res.status(404).json({
           success: false,
-          error: 'No assessments found for this user'
+          error: 'No assessments found for this user',
+          shouldStartNew: true
         });
       }
       
@@ -85,6 +103,9 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { answers } = req.body;
       
+      // Log received answers to debug
+      console.log('Received answers for scoring:', JSON.stringify(answers));
+      
       if (!answers || !Array.isArray(answers)) {
         return res.status(400).json({
           success: false,
@@ -96,32 +117,49 @@ module.exports = async (req, res) => {
       let score = 0;
       const possiblePoints = answers.length * 20; // Maximum possible points
       
-      answers.forEach(answer => {
+      // Log each answer and its contribution to score
+      answers.forEach((answer, index) => {
+        console.log(`Processing answer ${index + 1}: ${answer.questionId} - ${answer.answer}`);
+        
         if (answer.answer === 'Yes') {
           score += 20; // Full points
+          console.log(`  Added 20 points for 'Yes', total now: ${score}`);
         } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
           score += 10; // Half points
+          console.log(`  Added 10 points for '${answer.answer}', total now: ${score}`);
+        } else {
+          // No points for other answers
+          console.log(`  Added 0 points for '${answer.answer}', total still: ${score}`);
         }
-        // 'No' answers get 0 points
       });
       
       // Calculate score as percentage of possible points
       const finalScore = Math.round((score / possiblePoints) * 100);
       
-      console.log(`Assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
+      console.log(`Final assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
       
       if (user.isBypassUser) {
-        // For bypass users, return a mock created assessment without DB insertion
+        // For bypass users, store the assessment in memory and return it
+        const bypassAssessment = {
+          _id: 'mock-assessment-' + Date.now(),
+          user: user.id,
+          answers: answers,
+          score: finalScore,
+          completedAt: new Date(),
+          isBypassData: true
+        };
+        
+        // Store assessment for future GET requests
+        if (!global.bypassUserAssessments) {
+          global.bypassUserAssessments = {};
+        }
+        global.bypassUserAssessments[user.id] = bypassAssessment;
+        
+        console.log('Stored bypass user assessment in memory');
+        
         return res.status(201).json({
           success: true,
-          data: {
-            _id: 'mock-assessment-' + Date.now(),
-            user: user.id,
-            answers: answers,
-            score: finalScore, // Use the corrected score
-            completedAt: new Date(),
-            isBypassData: true
-          }
+          data: bypassAssessment
         });
       }
       
@@ -129,7 +167,7 @@ module.exports = async (req, res) => {
       const assessment = await Assessment.create({
         user: userIdForQuery,
         answers,
-        score: finalScore // Use the corrected score
+        score: finalScore
       });
       
       return res.status(201).json({
