@@ -84,26 +84,23 @@ const AssessmentState = props => {
     }
   };
 
-  // Add the updateTaskStatus function
-  const updateTaskStatus = async (taskId, updateData) => {
+  const updateTaskStatus = async (taskId, data) => {
     try {
-      dispatch({ type: 'SET_LOADING' });
-      
-      const res = await api.put(`/assessments/tasks/${taskId}`, updateData);
+      const res = await api.put(`/api/assessments/tasks/${taskId}`, data);
       
       dispatch({
-        type: 'UPDATE_TASK',
+        type: UPDATE_TASK,
         payload: res.data.data
       });
       
-      return res.data.data;
-    } catch (err) {
-      console.error('Error updating task:', err);
+      return res.data;
+    } catch (error) {
+      console.error('Error updating task:', error);
       dispatch({
-        type: 'ASSESSMENT_ERROR',
-        payload: err.response?.data?.error || 'Error updating task'
+        type: ASSESSMENT_ERROR,
+        payload: error.response?.data?.error || 'Error updating task'
       });
-      throw err;
+      throw error;
     }
   };
   // Toggle task completion

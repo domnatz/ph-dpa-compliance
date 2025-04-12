@@ -19,7 +19,7 @@ const assessmentsHandler = require('./api/assessments/index');
 const tasksHandler = require('./api/assessments/task');
 
 // Create a separate variable for the task ID handler with the CORRECT path
-const taskIdHandler = require('./api/assessments/tasks[id].js');  // Note: no slash before [id]
+const taskIdHandler = require('./api/assessments/taskbyId.js');  // Note: no slash before [id]
 
 // Create Express handler for serverless functions
 const createHandler = (handler) => async (req, res) => {

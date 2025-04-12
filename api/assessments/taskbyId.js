@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-// Fix the model import paths - only two levels up, not three
+const connectDB = require('../../utils/db');
 const Task = require('../../models/taskModel');
 const User = require('../../models/userModel');
 
@@ -21,14 +21,23 @@ const verifyToken = async (token) => {
 };
 
 module.exports = async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   
-  // For PUT requests to update task completion
-  if (req.method === 'PUT') {
-    try {
+  try {
+    // Connect to database first
+    await connectDB();
+    
+    // For PUT requests to update task completion
+    if (req.method === 'PUT') {
       // Get task ID - could be in query or params
       const id = req.params?.id || req.query?.id;
       
@@ -76,19 +85,19 @@ module.exports = async (req, res) => {
         success: true,
         data: task
       });
-    } catch (error) {
-      console.error('Update task error:', error);
-      return res.status(500).json({
+    } else {
+      // Method not allowed
+      res.setHeader('Allow', ['PUT', 'OPTIONS']);
+      return res.status(405).json({
         success: false,
-        error: 'Server error'
+        error: `Method ${req.method} not allowed`
       });
     }
-  } else {
-    // Method not allowed
-    res.setHeader('Allow', ['PUT', 'OPTIONS']);
-    return res.status(405).json({
-      success: false,
-      error: `Method ${req.method} not allowed`
+  } catch (error) {
+    console.error('API error:', error);
+    return res.status(500).json({
+      success: false, 
+      error: 'Server error'
     });
   }
 };
