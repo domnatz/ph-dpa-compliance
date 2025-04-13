@@ -24,14 +24,16 @@ export default (state, action) => {
         tasks: action.payload,
         loading: false
       };
-    case 'UPDATE_TASK':
-      return {
-        ...state,
-        tasks: state.tasks.map(task =>
-          task._id === action.payload._id ? action.payload : task
-        ),
-        loading: false
-      };
+      case 'UPDATE_TASK':
+        return {
+          ...state,
+          tasks: state.tasks.map(task =>
+            task._id === action.payload._id 
+              ? { ...action.payload, completed: Boolean(action.payload.completed) } // Ensure completed is boolean
+              : task
+          ),
+          loading: false
+        };
     case 'UPDATE_COMPLIANCE_SCORE':
       return {
         ...state,
