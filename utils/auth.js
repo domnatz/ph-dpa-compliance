@@ -16,7 +16,7 @@ exports.verifyToken = async (req, res, next) => {
 
     // Check if the user is a bypass user
     if (decoded.isBypassUser) {
-      console.log('Bypass user detected:', decoded.id);
+    
       req.user = {
         id: decoded.id,
         name: decoded.id.replace('bypass-', ''),

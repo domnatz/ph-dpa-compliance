@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
   
-  console.log('Bypass login used for:', req.body?.email);
+
 
   // Generate a proper JWT token with a bypass flag
   const userId = 'bypass-' + (req.body?.email || 'user').replace(/[^a-z0-9]/gi, '');
@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
     { expiresIn: '30d' }
   );
 
-  console.log('Bypass login successful, generated token:', token);
+  
 
   return res.status(200).json({
     success: true,

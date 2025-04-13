@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
     const isBypassUser = decoded.id && decoded.id.startsWith('bypass-');
 
     if (isBypassUser) {
-      console.log('Bypass user detected:', decoded.id);
+    
       return res.status(200).json({
         success: true,
         data: {

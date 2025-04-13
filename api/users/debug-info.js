@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
   
   try {
     await connectDB();
-    console.log('Debug info: Connected to database');
+
     
     // Only allow GET
     if (req.method !== 'GET') {
@@ -26,8 +26,7 @@ module.exports = async (req, res) => {
     
     // Get count of users
     const userCount = await UserCollection.countDocuments();
-    console.log(`Found ${userCount} users in database`);
-    
+ 
     // Get all users with SAFE info only (no passwords)
     const users = await UserCollection.find({}).project({
       _id: 1,
@@ -40,7 +39,7 @@ module.exports = async (req, res) => {
       passwordLength: { $strLenCP: { $ifNull: ["$password", ""] } }
     }).toArray();
     
-    console.log(`Retrieved ${users.length} user records for debugging`);
+  
     
     return res.status(200).json({
       success: true,

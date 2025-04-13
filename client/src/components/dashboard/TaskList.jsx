@@ -10,7 +10,7 @@ const TaskList = ({ tasks, onToggleTask }) => {
 
   // Function to handle checkbox click with proper event handling
   const handleToggleTask = (taskId) => {
-    console.log('Toggling task with ID:', taskId);
+   
     onToggleTask(taskId);
   };
 

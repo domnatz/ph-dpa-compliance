@@ -22,13 +22,10 @@ async function connectDB() {
 
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/phildpa';
     
-    console.log(`Connecting to MongoDB: ${dbUri.substring(0, dbUri.indexOf('@') > 0 
-      ? dbUri.indexOf('@') 
-      : 10)}...`);
-      
+   
     cached.promise = mongoose.connect(dbUri, opts)
       .then(mongoose => {
-        console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+       
         return mongoose;
       })
       .catch(err => {
@@ -48,7 +45,7 @@ async function connectDB() {
     // Listen for Node process termination and close the connection
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
-      console.log('MongoDB connection closed due to app termination');
+     
       process.exit(0);
     });
   }

@@ -76,12 +76,7 @@ module.exports = async (req, res) => {
   
   try {
     // Log request details for debugging
-    console.log('Assessment API called:', {
-      method: req.method,
-      path: req.url,
-      query: req.query,
-      body: req.method === 'POST' ? JSON.stringify(req.body).substring(0, 200) + '...' : null
-    });
+   
     
     // Connect to the database
     await connectDB();
@@ -97,13 +92,13 @@ module.exports = async (req, res) => {
       ? user.id // Use the actual ID for bypass users
       : user._id;
     
-    console.log(`User accessing assessments: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
+   
     
     // Handle GET method - get the latest assessment or return mock data for bypass
     if (req.method === 'GET') {
       // Check if we should force a new assessment (for "Take Assessment" button)
       if (req.query.new === 'true') {
-        console.log('New assessment requested - returning 404 to trigger assessment flow');
+       
         return res.status(404).json({
           success: false,
           error: 'No assessments found for this user',
@@ -118,7 +113,7 @@ module.exports = async (req, res) => {
         
         if (!hasSubmittedAssessment) {
           // No previous assessment - trigger new assessment flow
-          console.log('No previous assessment for bypass user - triggering new assessment');
+        
           return res.status(404).json({
             success: false,
             error: 'No assessments found for this user',
@@ -127,7 +122,7 @@ module.exports = async (req, res) => {
         }
         
         // Return previously submitted assessment for bypass user
-        console.log('Returning previously submitted assessment for bypass user');
+       
         return res.status(200).json({
           success: true,
           data: global.bypassUserAssessments[user.id]
@@ -156,7 +151,7 @@ module.exports = async (req, res) => {
       const { answers } = req.body;
       
       // Log received answers to debug
-      console.log('Received answers for scoring:', JSON.stringify(answers));
+     
       
       if (!answers || !Array.isArray(answers)) {
         return res.status(400).json({
@@ -171,24 +166,24 @@ module.exports = async (req, res) => {
       
       // Log each answer and its contribution to score
       answers.forEach((answer, index) => {
-        console.log(`Processing answer ${index + 1}: ${answer.questionId} - ${answer.answer}`);
+       
         
         if (answer.answer === 'Yes') {
           score += 20; // Full points
-          console.log(`  Added 20 points for 'Yes', total now: ${score}`);
+         
         } else if (answer.answer === 'Partially' || answer.answer === 'In Progress') {
           score += 10; // Half points
-          console.log(`  Added 10 points for '${answer.answer}', total now: ${score}`);
+        
         } else {
-          // No points for other answers
-          console.log(`  Added 0 points for '${answer.answer}', total still: ${score}`);
+       
+         
         }
       });
       
       // Calculate score as percentage of possible points
       const finalScore = Math.round((score / possiblePoints) * 100);
       
-      console.log(`Final assessment score calculation: ${score}/${possiblePoints} = ${finalScore}%`);
+      
       
       if (user.isBypassUser) {
         // For bypass users, store the assessment in memory and return it
@@ -249,7 +244,7 @@ module.exports = async (req, res) => {
         // Store the tasks
         global.bypassUserTasks[user.id] = tasks;
         
-        console.log(`Created ${tasks.length} tasks based on assessment answers`);
+    
         
         return res.status(201).json({
           success: true,

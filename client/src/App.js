@@ -24,7 +24,7 @@ const AppContent = () => {
   useEffect(() => {
     // Check localStorage directly for token
     const token = localStorage.getItem('token');
-    console.log('App initialization - Token exists:', !!token);
+   
 
     if (token) {
       loadUser();

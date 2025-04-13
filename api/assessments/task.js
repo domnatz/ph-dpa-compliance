@@ -21,12 +21,7 @@ module.exports = async (req, res) => {
   }
   
   try {
-    console.log('Task API called:', {
-      method: req.method,
-      path: req.url,
-      query: req.query,
-      body: req.method === 'POST' ? req.body : null // Log the request body for POST
-    });
+   
     
     // Connect to the database
     await connectDB();
@@ -42,7 +37,7 @@ module.exports = async (req, res) => {
       ? user.id // Use the actual ID for bypass users
       : user._id;
     
-    console.log(`User accessing tasks: ${user.id || user._id}, isBypass: ${!!user.isBypassUser}`);
+   
     
     // Handle GET method - get tasks
     if (req.method === 'GET') {
@@ -52,7 +47,7 @@ module.exports = async (req, res) => {
           ? global.bypassUserTasks[user.id] 
           : [];
         
-        console.log(`Returning ${userTasks.length} bypass user tasks from memory`);
+       
         
         return res.status(200).json({
           success: true,
@@ -73,7 +68,7 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { taskId, completed } = req.body;
       
-      console.log('Task update request received:', { taskId, completed });
+    
       
       if (!taskId) {
         return res.status(400).json({
@@ -85,15 +80,14 @@ module.exports = async (req, res) => {
       if (user.isBypassUser) {
         // Update mock task for bypass users
         if (!global.bypassUserTasks || !global.bypassUserTasks[user.id]) {
-          console.log('No bypass tasks found for user:', user.id);
+        
           return res.status(404).json({
             success: false,
             error: 'No tasks found for this user'
           });
         }
         
-        console.log('Looking for task ID:', taskId);
-        console.log('Available task IDs:', global.bypassUserTasks[user.id].map(t => t._id));
+      
         
         // Find and update the bypass user task in memory - using string comparison for IDs
         const taskIndex = global.bypassUserTasks[user.id].findIndex(task => 
@@ -101,7 +95,7 @@ module.exports = async (req, res) => {
         );
         
         if (taskIndex === -1) {
-          console.log('Task not found in bypass user tasks');
+         
           return res.status(404).json({
             success: false,
             error: 'Task not found'
@@ -110,7 +104,7 @@ module.exports = async (req, res) => {
         
         // Update the task completion status
         const newCompleted = completed !== false;
-        console.log(`Updating task ${taskId} to completed=${newCompleted}`);
+      
         global.bypassUserTasks[user.id][taskIndex].completed = newCompleted;
         
         // Return the updated task

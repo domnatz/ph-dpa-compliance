@@ -19,10 +19,8 @@ api.interceptors.request.use(
     const token = storage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('Sending request with token:', token.substring(0, 10) + '...');
-    } else {
-      console.log('No token found in storage');
-    }
+
+    } 
     return config;
   },
   error => Promise.reject(error)

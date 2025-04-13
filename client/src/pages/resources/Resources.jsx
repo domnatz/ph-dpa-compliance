@@ -62,14 +62,14 @@ const Resources = () => {
           setLoading(false);
         } else {
           // Fallback to static if API response doesn't have expected format
-          console.log('API response missing data, using static resources');
+         
           setResources(staticResources);
           setLoading(false);
         }
       } catch (err) {
         console.error('Error fetching resources:', err);
         // Use static resources as fallback
-        console.log('Using static resources due to API error');
+       
         setResources(staticResources);
         setFetchError(true);
         setLoading(false);
@@ -79,7 +79,7 @@ const Resources = () => {
     // Try API, but don't wait too long
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.log('API fetch taking too long, using static resources');
+       
         setResources(staticResources);
         setLoading(false);
       }

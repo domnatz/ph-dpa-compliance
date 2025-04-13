@@ -33,7 +33,7 @@ const Dashboard = () => {
   // Enhanced toggle task function with better error handling and optimistic updates
   const handleToggleTask = async (taskId) => {
     try {
-      console.log(`Dashboard: Toggling task with ID: ${taskId}`);
+     
       
       // Find the current task to get its status
       const task = tasks.find(t => t._id === taskId);
@@ -52,7 +52,7 @@ const Dashboard = () => {
       // 4. Recalculating compliance score
       await toggleTask(taskId);
       
-      console.log(`Task ${taskId} toggled successfully`);
+     
       
       // Clear updating state
       setUpdatingTaskId(null);

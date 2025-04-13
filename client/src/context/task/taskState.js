@@ -21,9 +21,9 @@ const TaskState = (props) => {
   // Get all tasks
   const getTasks = async () => {
     try {
-      console.log('Fetching tasks...');
+     
       const res = await axios.get('/api/assessments/task');
-      console.log('Tasks fetched:', res.data.data);
+      
 
       dispatch({
         type: GET_TASKS,
@@ -41,7 +41,7 @@ const TaskState = (props) => {
   // Toggle task completion status
   const toggleTask = async (taskId) => {
     try {
-      console.log(`Toggling task completion for task ID: ${taskId}`);
+      
 
       // Find the current task in the state
       const currentTask = state.tasks.find((task) => String(task._id) === String(taskId));
@@ -56,7 +56,7 @@ const TaskState = (props) => {
         completed: !currentTask.completed,
       });
 
-      console.log('Task toggle response:', res.data);
+     
 
       // Update the state with the updated task
       dispatch({
@@ -74,7 +74,7 @@ const TaskState = (props) => {
 
   // Clear errors
   const clearErrors = () => {
-    console.log('Clearing errors...');
+    
     dispatch({ type: CLEAR_ERRORS });
   };
 

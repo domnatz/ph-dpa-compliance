@@ -42,9 +42,7 @@ app.post('/api/users/bypass-login', (req, res) => bypassLoginHandler(req, res));
 
 // Enhanced registration route with improved logging
 app.post('/api/users/register', (req, res) => {
-  console.log('Processing registration request for:', req.body.email);
   const result = registerHandler(req, res);
-  console.log('Registration request processed');
   return result;
 });
 
@@ -58,7 +56,6 @@ app.all('/api/assessments/tasks/:id', (req, res) => {
 
 // Add the fallback login-test route that client may be using
 app.post('/api/login-test', (req, res) => {
-  console.log('Using login-test fallback route');
   return res.status(200).json({
     success: true,
     token: 'test-token-123',
@@ -92,9 +89,9 @@ app.listen(PORT, async () => {
     // Only connect to DB in production or if explicitly enabled
     if (process.env.NODE_ENV === 'production' || process.env.CONNECT_DB === 'true') {
       await connectDB();
-      console.log('Connected to database');
+    
     }
-    console.log(`Server running on port ${PORT}`);
+
   } catch (error) {
     console.error('Failed to start server:', error);
   }

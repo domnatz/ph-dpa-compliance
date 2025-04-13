@@ -19,7 +19,7 @@ const Register = () => {
   // Modified navigate effect - don't auto-redirect for new registrations
   useEffect(() => {
     if (isAuthenticated && !registrationComplete) {
-      console.log('User is authenticated, redirecting to dashboard');
+     
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate, registrationComplete]);
@@ -39,7 +39,7 @@ const Register = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
-    console.log('Submitting registration form:', { name, email, company });
+   
     
     if (name === '' || email === '' || password === '' || company === '') {
       setLocalError('Please enter all fields');
@@ -47,7 +47,7 @@ const Register = () => {
       setLocalError('Passwords do not match');
     } else {
       setIsSubmitting(true);
-      console.log('Calling register with data');
+      
       
       try {
         // Call register and capture response
@@ -58,7 +58,7 @@ const Register = () => {
           company
         });
         
-        console.log('Registration result:', result);
+        
         
         // Mark registration as complete to prevent auto-redirect
         setRegistrationComplete(true);

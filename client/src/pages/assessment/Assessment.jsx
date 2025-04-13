@@ -125,7 +125,7 @@ const Assessment = () => {
         };
       });
       
-      console.log('Submitting formatted answers:', formattedAnswers);
+     
       
       await submitAssessment(formattedAnswers);
       await generateTasks();

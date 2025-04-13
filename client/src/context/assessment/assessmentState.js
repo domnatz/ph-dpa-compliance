@@ -48,10 +48,10 @@ const AssessmentState = props => {
   // Get current assessment
   const getAssessment = async () => {
     try {
-      console.log('Fetching assessment...');
+     
       const res = await api.get('/assessments');
       
-      console.log('Assessment response:', res.data);
+    
       dispatch({
         type: 'GET_ASSESSMENT',
         payload: res.data.data
@@ -68,10 +68,10 @@ const AssessmentState = props => {
   // Submit assessment
   const submitAssessment = async answers => {
     try {
-      console.log('Submitting assessment answers:', answers);
+      
       const res = await api.post('/assessments', { answers });
 
-      console.log('Assessment submission response:', res.data);
+     
       dispatch({
         type: 'SUBMIT_ASSESSMENT',
         payload: res.data.data
@@ -91,10 +91,10 @@ const AssessmentState = props => {
   // Get tasks - UPDATED to calculate compliance score
   const getTasks = async () => {
     try {
-      console.log('Fetching tasks...');
+      
       const res = await api.get('/assessments/tasks');
 
-      console.log('Tasks fetched:', res.data.data);
+      
       dispatch({
         type: 'GET_TASKS',
         payload: res.data.data
@@ -115,10 +115,10 @@ const AssessmentState = props => {
   // Generate tasks
   const generateTasks = async () => {
     try {
-      console.log('Generating tasks...');
+     
       const res = await api.post('/assessments', { generateTasks: true });
 
-      console.log('Tasks generated:', res.data.data);
+   
       dispatch({
         type: 'GENERATE_TASKS',
         payload: res.data.data
@@ -139,14 +139,14 @@ const AssessmentState = props => {
   // Update task status
   const updateTaskStatus = async (taskId, completed) => {
     try {
-      console.log(`Updating task ${taskId} with completed=${completed}`);
+      
       
       const res = await api.post('/assessments/tasks', {
         taskId,
         completed
       });
       
-      console.log('Task update response:', res.data);
+     
       dispatch({
         type: 'UPDATE_TASK',
         payload: res.data.data
@@ -179,15 +179,15 @@ const AssessmentState = props => {
         }
         
         // DEBUG: Log the initial state of all tasks
-        console.log('BEFORE toggle - All tasks:');
-        state.tasks.forEach(t => console.log(`Task ${t._id}: completed=${t.completed}`));
+       
+        state.tasks.forEach(t => {});
         
         // Get current state (explicitly as boolean)
         const currentCompleted = Boolean(currentTask.completed);
         // Toggle it
         const newStatus = !currentCompleted;
         
-        console.log(`Toggle ${taskId}: ${currentCompleted} → ${newStatus}`);
+        
         
         // First update locally for immediate feedback
         dispatch({
@@ -213,7 +213,7 @@ const AssessmentState = props => {
           completed: res.data.data.completed === true
         };
         
-        console.log(`Server returned: ${updatedTask._id} with completed=${updatedTask.completed}`);
+      
         
         // Update with server response
         dispatch({
@@ -223,8 +223,8 @@ const AssessmentState = props => {
         
         // DEBUG: Log the final state
         setTimeout(() => {
-          console.log('AFTER server update - Current tasks:');
-          state.tasks.forEach(t => console.log(`Task ${t._id}: completed=${t.completed}`));
+        
+          state.tasks.forEach(t => {});
           // Recalculate score after server update
           calculateAndUpdateComplianceScore();
         }, 0);

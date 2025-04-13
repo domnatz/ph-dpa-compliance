@@ -53,7 +53,7 @@ export const AssessmentProvider = ({ children }) => {
       setLoading(true);
       
       // Log the answers being submitted
-      console.log('Submitting assessment with answers:', answers);
+
       
       const res = await axios.post('/api/assessments', { answers });
       

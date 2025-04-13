@@ -38,13 +38,7 @@ module.exports = async (req, res) => {
     await connectDB();
     
     // Log all request details for debugging
-    console.log('Task API called:', {
-      method: req.method,
-      url: req.url,
-      query: req.query,
-      params: req.params,
-      id: req.query.id || "Not found"
-    });
+
     
     // For PUT requests to update task completion
     if (req.method === 'PUT') {

@@ -34,12 +34,7 @@ module.exports = async (req, res) => {
   
   try {
     // Log request details for debugging
-    console.log('Task API called:', {
-      method: req.method,
-      url: req.url,
-      query: req.query,
-      body: req.body ? 'Has body' : 'No body'
-    });
+   
     
     // Connect to database first
     await connectDB();
@@ -49,7 +44,7 @@ module.exports = async (req, res) => {
       // Get task ID - could be in query or params
       const id = req.query?.id;
       
-      console.log('Task ID from query:', id);
+     
       
       if (!id) {
         return res.status(400).json({

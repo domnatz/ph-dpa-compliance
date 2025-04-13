@@ -18,14 +18,14 @@ module.exports = async (req, res) => {
   try {
     // Connect to database
     await connectDB();
-    console.log('Connected to database for registration');
+   
     
     // Only allow POST for this endpoint
     if (req.method !== 'POST') {
       return res.status(405).json({ success: false, error: 'Method not allowed' });
     }
     
-    console.log('Register request body:', req.body);
+   
     
     let { name, email, password, company } = req.body;
     
@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        console.log('User already exists:', email);
+       
         return res.status(400).json({
           success: false,
           error: 'User with this email already exists'
@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
-    console.log('Hashed password length:', hashedPassword.length);
+    
     
     // Create user document
     const user = await User.create({
@@ -86,16 +86,13 @@ module.exports = async (req, res) => {
       lastLogin: new Date() // Set initial login time
     });
     
-    console.log('User created successfully:', user._id);
+    
     
     // Generate token manually
     const secret = process.env.JWT_SECRET || 'defaultsecretkey';
     const expiry = process.env.JWT_EXPIRE || '30d';
     
-    console.log('Using JWT settings:', { 
-      secretLength: secret.length,
-      expiry 
-    });
+   
     
     const token = jwt.sign(
       { id: user._id },

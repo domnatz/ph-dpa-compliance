@@ -19,7 +19,7 @@ const AuthState = props => {
   const loadUser = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token found in storage');
+    
       dispatch({ type: 'AUTH_ERROR' });
       return;
     }
@@ -50,13 +50,10 @@ const AuthState = props => {
   const register = async formData => {
     try {
       dispatch({ type: 'SET_LOADING' });
-      
-      // Log the request to help with debugging
-      console.log('Registering user:', { ...formData, password: '***' });
-      
+    
       const res = await api.post('/users/register', formData);
       
-      console.log('Registration response:', res.data);
+     
       
       // Don't automatically authenticate after registration
       // Instead, return the response data so the component can handle redirect
@@ -111,7 +108,7 @@ const AuthState = props => {
       loadUser();
       return res.data;
     } catch (loginError) {
-      console.log('Main login failed, trying emergency endpoint:', loginError);
+      
       
       try {
         // If main login fails, try emergency endpoint
@@ -129,7 +126,7 @@ const AuthState = props => {
         loadUser();
         return emergencyRes.data;
       } catch (emergencyError) {
-        console.log('Emergency login failed:', emergencyError);
+        
         
         try {
           // Final fallback to bypass login
@@ -145,7 +142,7 @@ const AuthState = props => {
           });
           
           loadUser();
-          console.log('Using bypass login as fallback');
+          
           return bypassRes.data;
         } catch (bypassError) {
           console.error('All login attempts failed:', bypassError);

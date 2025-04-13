@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = url.pathname;
   
-  console.log(`API Router handling: ${req.method} ${path}`);
+
   const startTime = Date.now();
 
   try {
@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
     
     // Add a fallback login-test route for backward compatibility
     else if (path === '/api/login-test') {
-      console.log('Using built-in login test fallback');
+
       return res.status(200).json({
         success: true,
         token: 'test-token-123',
@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
     
     // Default response for unmatched routes
     else {
-      console.log(`Route not found: ${path}`);
+    
       return res.status(404).json({ 
         error: 'Not Found',
         message: `Route ${path} not found`
@@ -86,6 +86,6 @@ module.exports = async (req, res) => {
       message: error.message 
     });
   } finally {
-    console.log(`Request to ${path} completed in ${Date.now() - startTime}ms`);
+
   }
 };

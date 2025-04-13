@@ -5,7 +5,7 @@ const connectDB = require('../../utils/db');
 
 module.exports = async (req, res) => {
   // Add more debugging
-  console.log('Login handler called');
+
   
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
     // Connect to database first - move this up
     try {
       await connectDB();
-      console.log('Connected to database');
+     
     } catch (dbConnectError) {
       console.error('Database connection error:', dbConnectError);
       return res.status(500).json({
@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
     }
     
     // Process the request body
-    console.log('Login request received', { method: req.method });
+   
     
     // Only allow POST for this endpoint
     if (req.method !== 'POST') {
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
       });
     }
     
-    console.log('Request body type:', typeof req.body);
+   
     
     let email, password;
     
@@ -83,13 +83,9 @@ module.exports = async (req, res) => {
     let user;
     try {
       email = email.toLowerCase().trim();
-      console.log('Looking for user with email:', email);
+      
       user = await User.findOne({ email }).select('+password');
-      console.log('User found:', user ? 'Yes' : 'No');
-      if (user) {
-        console.log('User password exists:', !!user.password);
-        console.log('Password length:', user.password?.length);
-      }
+     
     } catch (findError) {
       console.error('User lookup error:', findError);
       return res.status(500).json({
@@ -109,7 +105,7 @@ module.exports = async (req, res) => {
     // Verify password
     let isMatch = false;
     try {
-      console.log('Comparing passwords');
+     
       // Ensure password field was properly retrieved
       if (!user.password) {
         console.error('User password field is empty');
@@ -120,7 +116,7 @@ module.exports = async (req, res) => {
       }
       
       isMatch = await bcrypt.compare(password, user.password);
-      console.log('Password match:', isMatch);
+     
     } catch (bcryptError) {
       console.error('Password comparison error:', bcryptError);
       return res.status(500).json({
@@ -149,14 +145,11 @@ module.exports = async (req, res) => {
     // Generate token
     let token;
     try {
-      console.log('Generating token');
+     
       const secret = process.env.JWT_SECRET || 'fallbacksecretkey';
       const expiry = process.env.JWT_EXPIRE || '30d';
       
-      console.log('Using JWT settings:', { 
-        secretLength: secret.length,
-        expiry 
-      });
+     
       
       token = jwt.sign(
         { id: user._id },
@@ -173,7 +166,7 @@ module.exports = async (req, res) => {
     }
     
     // Success response
-    console.log('Login successful');
+   
     return res.status(200).json({
       success: true,
       token,

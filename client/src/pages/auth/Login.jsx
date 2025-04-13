@@ -36,14 +36,14 @@ const Login = () => {
   // Try emergency login if regular login fails
   const tryEmergencyLogin = async () => {
     try {
-      console.log('Attempting emergency login');
+     
       const res = await axios.post('/api/users/emergency-login', {
         email,
         password
       });
       
       if (res.data.success) {
-        console.log('Emergency login successful');
+        
         // Use the loginSuccess action from context
         if (loginSuccess) {
           loginSuccess(res.data);
@@ -84,7 +84,7 @@ const Login = () => {
       // If we're still here and not authenticated, try emergency login
       setTimeout(async () => {
         if (!isAuthenticated) {
-          console.log('Regular login did not redirect, trying emergency login');
+   
           const emergencyLoginSucceeded = await tryEmergencyLogin();
           
           if (!emergencyLoginSucceeded) {

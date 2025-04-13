@@ -14,7 +14,7 @@ const authReducer = (state, action) => {
       // Use our safer storage method
       const token = action.payload.token;
       storage.setItem('token', token);
-      console.log('Token saved in reducer:', token.substring(0, 10) + '...');
+     
       
       return {
         ...state,

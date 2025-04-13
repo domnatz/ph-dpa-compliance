@@ -11,7 +11,7 @@ const TaskList = ({ tasks, onToggleTask }) => {
   // Function to handle checkbox click with proper event handling
   const handleToggleTask = (taskId, e) => {
     if (e) e.stopPropagation(); // Stop propagation to prevent any parent clicks
-    console.log('Toggling task with ID:', taskId);
+
     onToggleTask(taskId);
   };
 
