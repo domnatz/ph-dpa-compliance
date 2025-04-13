@@ -9,10 +9,42 @@ const AssessmentState = props => {
     assessment: null,
     tasks: [],
     loading: true,
-    error: null
+    error: null,
+    complianceScore: 0 // Added compliance score to track progress
   };
 
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
+
+  // Calculate and update compliance score
+  const calculateAndUpdateComplianceScore = () => {
+    try {
+      // First get the updated tasks list
+      const totalTasks = state.tasks.length;
+      if (totalTasks === 0) return;
+      
+      // Count completed tasks
+      const completedTasks = state.tasks.filter(task => task.completed).length;
+      
+      // Calculate the percentage (rounded to nearest whole number)
+      const score = Math.round((completedTasks / totalTasks) * 100);
+      
+      console.log(`Compliance score updated: ${completedTasks}/${totalTasks} tasks complete (${score}%)`);
+      
+      // Update the score in state
+      dispatch({
+        type: 'UPDATE_COMPLIANCE_SCORE',
+        payload: score
+      });
+      
+      // Optionally save this to the backend
+      api.post('/assessments/compliance-score', { score })
+        .then(res => console.log('Compliance score saved to server'))
+        .catch(err => console.error('Failed to save compliance score:', err));
+        
+    } catch (error) {
+      console.error('Error calculating compliance score:', error);
+    }
+  };
 
   // Get current assessment - FIXED PATH
   const getAssessment = async () => {
@@ -59,7 +91,7 @@ const AssessmentState = props => {
     }
   };
 
-  // Get tasks - FIXED PATH
+  // Get tasks - FIXED PATH and added compliance score update
   const getTasks = async () => {
     try {
       console.log('Fetching tasks...');
@@ -71,6 +103,10 @@ const AssessmentState = props => {
         type: 'GET_TASKS',
         payload: res.data.data
       });
+      
+      // Calculate initial compliance score after tasks are loaded
+      setTimeout(() => calculateAndUpdateComplianceScore(), 0);
+      
     } catch (err) {
       console.error('Error fetching tasks:', err);
       dispatch({
@@ -92,6 +128,10 @@ const AssessmentState = props => {
         type: 'GENERATE_TASKS',
         payload: res.data.data
       });
+      
+      // Calculate compliance score after generating tasks
+      setTimeout(() => calculateAndUpdateComplianceScore(), 0);
+      
     } catch (err) {
       console.error('Error generating tasks:', err);
       dispatch({
@@ -117,6 +157,10 @@ const AssessmentState = props => {
         type: 'UPDATE_TASK',
         payload: res.data.data
       });
+      
+      // Calculate new compliance score after task update
+      calculateAndUpdateComplianceScore();
+      
     } catch (err) {
       console.error('Error updating task:', err);
       console.error('Response:', err.response?.data);
@@ -129,7 +173,7 @@ const AssessmentState = props => {
     }
   };
 
-  // Toggle task completion - FIXED PATH
+  // Toggle task completion - FIXED PATH and updated to recalculate compliance score
   const toggleTask = async taskId => {
     try {
       console.log(`Toggle task called for ID: ${taskId}`);
@@ -159,6 +203,10 @@ const AssessmentState = props => {
         type: 'UPDATE_TASK',
         payload: res.data.data
       });
+      
+      // Calculate new compliance score after task toggle
+      calculateAndUpdateComplianceScore();
+      
     } catch (err) {
       console.error('Error in toggleTask:', err);
       console.error('Response:', err.response?.data);
@@ -179,12 +227,14 @@ const AssessmentState = props => {
         tasks: state.tasks,
         loading: state.loading,
         error: state.error,
+        complianceScore: state.complianceScore, // Added compliance score to context
         getAssessment,
         submitAssessment,
         generateTasks,
         getTasks,
         toggleTask,
-        updateTaskStatus
+        updateTaskStatus,
+        calculateAndUpdateComplianceScore // Added function to recalculate compliance
       }}
     >
       {props.children}

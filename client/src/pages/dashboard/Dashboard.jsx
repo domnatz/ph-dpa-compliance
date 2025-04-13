@@ -4,6 +4,7 @@ import AuthContext from '../../context/auth/authContext';
 import AssessmentContext from '../../context/assessment/assessmentContext';
 import ComplianceStatus from '../../components/dashboard/ComplianceStatus';
 import TaskList from '../../components/dashboard/TaskList';
+import './dashboard.css';
 
 const Dashboard = () => {
   const authContext = useContext(AuthContext);
@@ -13,10 +14,11 @@ const Dashboard = () => {
   const { 
     assessment, 
     tasks, 
+    complianceScore, // Add this to get the compliance score
     loading, 
     getAssessment, 
     getTasks, 
-    updateTaskStatus  // Make sure this is available in your context
+    toggleTask // Use toggleTask instead of updateTaskStatus
   } = assessmentContext;
   
   useEffect(() => {
@@ -25,21 +27,21 @@ const Dashboard = () => {
     // eslint-disable-next-line
   }, []);
   
-  // Enhanced toggle task function that actually updates the backend
+  // Updated to use toggleTask which handles the compliance score recalculation
   const handleToggleTask = async (taskId) => {
     try {
-      // Find the current task to get its status
-      const task = tasks.find(t => t._id === taskId);
-      if (!task) return;
-      
-      // Toggle the completed status
-      const newStatus = !task.completed;
-      
-      // Call the context method to update in backend
-      await updateTaskStatus(taskId, { completed: newStatus });
+      console.log(`Dashboard: Toggling task ${taskId}`);
+      await toggleTask(taskId);
     } catch (error) {
       console.error('Error toggling task:', error);
     }
+  };
+  
+  // Function to determine color based on score
+  const getScoreColor = (score) => {
+    if (score < 30) return '#dc3545'; // Red for low compliance
+    if (score < 70) return '#ffc107'; // Yellow for medium compliance
+    return '#28a745'; // Green for high compliance
   };
   
   if (loading) {
@@ -64,6 +66,37 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* New Compliance Progress Bar Card */}
+          <div className="lg:col-span-2 mb-4">
+            <div className="compliance-summary-card bg-white rounded-lg p-6 shadow-sm">
+              <h2 className="text-xl font-bold mb-3">Your Compliance Progress</h2>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">0%</span>
+                <span className="text-sm text-gray-600">50%</span>
+                <span className="text-sm text-gray-600">100%</span>
+              </div>
+              <div className="progress-bar bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div 
+                  className="progress-fill h-full transition-all duration-500 ease-in-out"
+                  style={{ 
+                    width: `${complianceScore}%`,
+                    backgroundColor: getScoreColor(complianceScore)
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="font-semibold text-lg" style={{ color: getScoreColor(complianceScore) }}>
+                  {complianceScore}% Complete
+                </p>
+                {complianceScore < 100 && (
+                  <p className="text-sm text-gray-600">
+                    Complete all remaining tasks to achieve full compliance
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          
           <ComplianceStatus score={assessment.score} />
           <TaskList tasks={tasks} onToggleTask={handleToggleTask} />
           
