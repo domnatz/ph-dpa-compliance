@@ -15,46 +15,36 @@ const AssessmentState = props => {
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
 
   // Calculate and update compliance score based on completed tasks
-        const calculateAndUpdateComplianceScore = () => {
-      try {
-        const totalTasks = state.tasks.length;
-        if (totalTasks === 0) {
-          dispatch({
-            type: 'UPDATE_COMPLIANCE_SCORE',
-            payload: 0
-          });
-          return 0;
-        }
-        
-        // Log each task's completion status
-        console.log('=== Task Completion Status ===');
-        state.tasks.forEach(task => {
-          console.log(`Task ${task._id.substring(0, 10)}...: completed=${Boolean(task.completed)}`);
-        });
-        
-        // Count completed tasks (using Boolean to force proper type)
-        const completedTasks = state.tasks.filter(task => Boolean(task.completed)).length;
-        
-        console.log(`Completed: ${completedTasks}/${totalTasks} tasks`);
-        
-        // Calculate percentage
-        const score = Math.round((completedTasks / totalTasks) * 100);
-        
-        console.log(`Compliance score: ${score}%`);
-        
-        // Update state with new score
-        dispatch({
-          type: 'UPDATE_COMPLIANCE_SCORE',
-          payload: score
-        });
-        
-        return score;
-      } catch (error) {
-        console.error('Error calculating compliance score:', error);
-        return 0;
-      }
-    };
-
+                const calculateAndUpdateComplianceScore = () => {
+          try {
+            const totalTasks = state.tasks.length;
+            if (totalTasks === 0) {
+              dispatch({
+                type: 'UPDATE_COMPLIANCE_SCORE',
+                payload: 0
+              });
+              return 0;
+            }
+            
+            // THE FIX: Change the condition - we're counting tasks where completed === FALSE as completed!
+            // This inverts our logic and explains the backwards behavior
+            const completedTasks = state.tasks.filter(task => task.completed === true).length;
+            
+            // Calculate percentage
+            const score = Math.round((completedTasks / totalTasks) * 100);
+            
+            // Update state with new score
+            dispatch({
+              type: 'UPDATE_COMPLIANCE_SCORE',
+              payload: score
+            });
+            
+            return score;
+          } catch (error) {
+            console.error('Error calculating compliance score:', error);
+            return 0;
+          }
+        };
   // Get current assessment
   const getAssessment = async () => {
     try {
