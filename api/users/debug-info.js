@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Debug info error:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error',

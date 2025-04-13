@@ -38,7 +38,7 @@ const Dashboard = () => {
       // Find the current task to get its status
       const task = tasks.find(t => t._id === taskId);
       if (!task) {
-        console.error(`Task with ID ${taskId} not found`);
+
         return;
       }
       
@@ -57,7 +57,7 @@ const Dashboard = () => {
       // Clear updating state
       setUpdatingTaskId(null);
     } catch (error) {
-      console.error('Error toggling task:', error);
+
       
       // Clear updating state in case of error
       setUpdatingTaskId(null);

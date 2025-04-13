@@ -70,7 +70,7 @@ const Register = () => {
           navigate('/login');
         }, 1000);
       } catch (err) {
-        console.error('Registration error:', err);
+
         setIsSubmitting(false);
         setLocalError(err.message || 'Registration failed');
       }

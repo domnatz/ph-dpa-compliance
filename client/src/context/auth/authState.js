@@ -31,7 +31,7 @@ const AuthState = props => {
       });
       dispatch({ type: 'USER_LOADED', payload: res.data.data });
     } catch (err) {
-      console.error('Error loading user from /me:', err);
+
   
       // If regular /me fails, try bypass-me
       try {
@@ -40,7 +40,7 @@ const AuthState = props => {
         });
         dispatch({ type: 'USER_LOADED', payload: bypassRes.data.data });
       } catch (bypassErr) {
-        console.error('Error loading user from bypass-me:', bypassErr);
+
         dispatch({ type: 'AUTH_ERROR' });
       }
     }
@@ -59,7 +59,7 @@ const AuthState = props => {
       // Instead, return the response data so the component can handle redirect
       return res.data;
     } catch (err) {
-      console.error('Register error:', err);
+
       
       // Make sure to extract a STRING error message, not pass an object
       const errorMessage = err.response?.data?.error || 
@@ -145,7 +145,7 @@ const AuthState = props => {
           
           return bypassRes.data;
         } catch (bypassError) {
-          console.error('All login attempts failed:', bypassError);
+
           
           dispatch({
             type: 'LOGIN_FAIL',

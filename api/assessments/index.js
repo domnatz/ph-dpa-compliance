@@ -274,7 +274,7 @@ module.exports = async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Assessment API error:', err.message, err.stack);
+
     
     // Handle specific errors
     if (err.message === 'Invalid token' || err.message === 'User not found') {

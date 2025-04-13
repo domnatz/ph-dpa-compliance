@@ -41,7 +41,7 @@ const AssessmentState = props => {
             
             return score;
           } catch (error) {
-            console.error('Error calculating compliance score:', error);
+     
             return 0;
           }
         };
@@ -57,7 +57,7 @@ const AssessmentState = props => {
         payload: res.data.data
       });
     } catch (err) {
-      console.error('Error fetching assessment:', err);
+     
       dispatch({
         type: 'ASSESSMENT_ERROR',
         payload: err.response?.data?.error || 'Error fetching assessment'
@@ -79,7 +79,7 @@ const AssessmentState = props => {
 
       return res.data.data;
     } catch (err) {
-      console.error('Error submitting assessment:', err);
+     
       dispatch({
         type: 'ASSESSMENT_ERROR',
         payload: err.response?.data?.error || 'Error submitting assessment'
@@ -104,7 +104,7 @@ const AssessmentState = props => {
       setTimeout(() => calculateAndUpdateComplianceScore(), 0);
       
     } catch (err) {
-      console.error('Error fetching tasks:', err);
+ 
       dispatch({
         type: 'ASSESSMENT_ERROR',
         payload: err.response?.data?.error || 'Error fetching tasks'
@@ -128,7 +128,7 @@ const AssessmentState = props => {
       setTimeout(() => calculateAndUpdateComplianceScore(), 0);
       
     } catch (err) {
-      console.error('Error generating tasks:', err);
+  
       dispatch({
         type: 'ASSESSMENT_ERROR',
         payload: err.response?.data?.error || 'Error generating tasks'
@@ -156,9 +156,7 @@ const AssessmentState = props => {
       calculateAndUpdateComplianceScore();
       
     } catch (err) {
-      console.error('Error updating task:', err);
-      console.error('Response:', err.response?.data);
-      console.error('Message:', err.message);
+      
       
       dispatch({
         type: 'ASSESSMENT_ERROR',
@@ -174,7 +172,7 @@ const AssessmentState = props => {
         const currentTask = state.tasks.find(task => String(task._id) === String(taskId));
         
         if (!currentTask) {
-          console.error(`Task with ID ${taskId} not found in state`);
+         
           return;
         }
         
@@ -230,7 +228,7 @@ const AssessmentState = props => {
         }, 0);
         
       } catch (err) {
-        console.error('Error in toggleTask:', err);
+       
         dispatch({
           type: 'ASSESSMENT_ERROR',
           payload: err.response?.data?.error || 'Error updating task'

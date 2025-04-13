@@ -29,13 +29,13 @@ async function connectDB() {
         return mongoose;
       })
       .catch(err => {
-        console.error('MongoDB connection error:', err);
+
         throw err;
       });
 
     // Handle MongoDB connection errors
     mongoose.connection.on('error', err => {
-      console.error('MongoDB connection error:', err);
+
     });
 
     mongoose.connection.on('disconnected', () => {

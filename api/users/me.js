@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Error verifying token:', err);
+
     return res.status(401).json({ success: false, error: 'Invalid token' });
   }
 };

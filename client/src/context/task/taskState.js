@@ -30,7 +30,7 @@ const TaskState = (props) => {
         payload: res.data.data,
       });
     } catch (err) {
-      console.error('Error fetching tasks:', err.response?.data || err.message);
+ 
       dispatch({
         type: TASK_ERROR,
         payload: err.response?.data?.error || 'Error fetching tasks',
@@ -46,7 +46,7 @@ const TaskState = (props) => {
       // Find the current task in the state
       const currentTask = state.tasks.find((task) => String(task._id) === String(taskId));
       if (!currentTask) {
-        console.error(`Task with ID ${taskId} not found in state`);
+
         return;
       }
 
@@ -64,7 +64,7 @@ const TaskState = (props) => {
         payload: res.data.data,
       });
     } catch (err) {
-      console.error('Error toggling task:', err.response?.data || err.message);
+
       dispatch({
         type: TASK_ERROR,
         payload: err.response?.data?.error || 'Error updating task',

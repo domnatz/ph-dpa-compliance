@@ -89,7 +89,7 @@ module.exports = async (req, res) => {
           authenticated = true;
         }
       } catch (bcryptError) {
-        console.error('bcrypt compare error:', bcryptError);
+
       }
     } else {
      
@@ -139,7 +139,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Emergency login fatal error:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error',

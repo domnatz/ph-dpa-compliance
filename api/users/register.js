@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
         });
       }
     } catch (dbError) {
-      console.error('Database search error:', dbError);
+
       return res.status(500).json({
         success: false, 
         error: 'Database error during user lookup',
@@ -115,7 +115,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Registration error:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error',

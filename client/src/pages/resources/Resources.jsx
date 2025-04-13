@@ -67,7 +67,7 @@ const Resources = () => {
           setLoading(false);
         }
       } catch (err) {
-        console.error('Error fetching resources:', err);
+
         // Use static resources as fallback
        
         setResources(staticResources);

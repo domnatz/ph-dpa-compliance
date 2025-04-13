@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
       await connectDB();
      
     } catch (dbConnectError) {
-      console.error('Database connection error:', dbConnectError);
+      
       return res.status(500).json({
         success: false,
         error: 'Database connection failed',
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
     
     // Check for request body
     if (!req.body) {
-      console.error('No request body');
+      
       return res.status(400).json({ 
         success: false, 
         error: 'Missing request body' 
@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
         password = req.body.password;
       }
     } catch (parseError) {
-      console.error('Body parsing error:', parseError);
+ 
       return res.status(400).json({
         success: false,
         error: 'Invalid request body format'
@@ -87,7 +87,7 @@ module.exports = async (req, res) => {
       user = await User.findOne({ email }).select('+password');
      
     } catch (findError) {
-      console.error('User lookup error:', findError);
+     
       return res.status(500).json({
         success: false,
         error: 'Database error during user lookup',
@@ -108,7 +108,7 @@ module.exports = async (req, res) => {
      
       // Ensure password field was properly retrieved
       if (!user.password) {
-        console.error('User password field is empty');
+        
         return res.status(500).json({
           success: false,
           error: 'User data is corrupt'
@@ -118,7 +118,7 @@ module.exports = async (req, res) => {
       isMatch = await bcrypt.compare(password, user.password);
      
     } catch (bcryptError) {
-      console.error('Password comparison error:', bcryptError);
+    
       return res.status(500).json({
         success: false,
         error: 'Password verification failed',
@@ -157,7 +157,7 @@ module.exports = async (req, res) => {
         { expiresIn: expiry }
       );
     } catch (jwtError) {
-      console.error('Token generation error:', jwtError);
+
       return res.status(500).json({
         success: false,
         error: 'Token generation failed',
@@ -179,7 +179,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Main login error:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error',

@@ -7,7 +7,7 @@ const storage = {
         window.dispatchEvent(new Event('storage'));
         return true;
       } catch (error) {
-        console.error('localStorage setItem error:', error);
+
         return false;
       }
     },
@@ -16,7 +16,7 @@ const storage = {
       try {
         return localStorage.getItem(key);
       } catch (error) {
-        console.error('localStorage getItem error:', error);
+
         return null;
       }
     },
@@ -27,7 +27,7 @@ const storage = {
         window.dispatchEvent(new Event('storage'));
         return true;
       } catch (error) {
-        console.error('localStorage removeItem error:', error);
+
         return false;
       }
     }

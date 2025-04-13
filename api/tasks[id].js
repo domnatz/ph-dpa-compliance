@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
         data: task
       });
     } catch (error) {
-      console.error('Update task error:', error);
+     
       return res.status(500).json({
         success: false,
         error: 'Server error'

@@ -89,10 +89,10 @@ app.listen(PORT, async () => {
     // Only connect to DB in production or if explicitly enabled
     if (process.env.NODE_ENV === 'production' || process.env.CONNECT_DB === 'true') {
       await connectDB();
-    
+      console.log('Connected to database');
     }
 
   } catch (error) {
-    console.error('Failed to start server:', error);
+   
   }
 });

@@ -40,7 +40,7 @@ exports.verifyToken = async (req, res, next) => {
     req.user = user;
     return req.user; // Return the user object for further use
   } catch (err) {
-    console.error('Token verification error:', err);
+
     return res.status(401).json({ success: false, error: 'Invalid token' });
   }
 };

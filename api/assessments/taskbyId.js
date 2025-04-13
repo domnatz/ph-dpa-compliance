@@ -103,7 +103,7 @@ module.exports = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Task API error:', error.message, error.stack);
+
     
     // Different status code for different errors
     if (error.message === 'Invalid token' || error.message === 'User not found') {

@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
         hashedPassword = await bcrypt.hash(password, salt);
        
       } catch (e) {
-        console.error('Failed to hash password:', e);
+
         return res.status(500).json({
           success: false,
           error: 'Error hashing password',
@@ -101,7 +101,7 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Direct register error:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error',

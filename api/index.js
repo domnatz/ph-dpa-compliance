@@ -80,7 +80,7 @@ module.exports = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('API Router Error:', error);
+  
     return res.status(500).json({ 
       error: 'Server Error', 
       message: error.message 

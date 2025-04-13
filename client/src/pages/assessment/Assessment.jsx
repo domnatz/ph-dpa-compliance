@@ -131,7 +131,7 @@ const Assessment = () => {
       await generateTasks();
       navigate('/dashboard');
     } catch (error) {
-      console.error('Failed to submit assessment:', error);
+
     }
   };
   

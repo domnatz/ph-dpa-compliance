@@ -23,7 +23,7 @@ const TaskItem = ({ task, refreshTasks }) => {
       
     } catch (error) {
       // Revert UI change if API call fails
-      console.error('Failed to update task:', error);
+
       setIsCompleted(!newStatus);
     } finally {
       setIsUpdating(false);

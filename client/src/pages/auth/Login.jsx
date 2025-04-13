@@ -56,7 +56,7 @@ const Login = () => {
         return true;
       }
     } catch (err) {
-      console.error('Emergency login failed:', err);
+
       setLocalError('Login failed. Please check your credentials and try again.');
       return false;
     }
@@ -95,7 +95,7 @@ const Login = () => {
       }, 1000);
       
     } catch (err) {
-      console.error('Login submission error:', err);
+
       setLocalError('An error occurred during login');
       setIsSubmitting(false);
     }
