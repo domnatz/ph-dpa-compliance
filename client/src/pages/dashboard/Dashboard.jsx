@@ -103,7 +103,10 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ComplianceStatus score={assessment.score} />
+          <ComplianceStatus 
+  score={assessment.score} 
+  taskCompletionScore={complianceScore} 
+/>
           
           {/* Add the compliance percentage above the task list */}
           <div>
