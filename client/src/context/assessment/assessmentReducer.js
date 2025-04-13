@@ -12,6 +12,21 @@ export default (state, action) => {
         assessment: action.payload,
         loading: false
       };
+      // Add this new case - separate action type for server updates
+case 'UPDATE_TASK_FROM_SERVER':
+  return {
+    ...state,
+    tasks: state.tasks.map(task => 
+      task._id === action.payload._id 
+        ? { 
+            ...action.payload,
+            // Force proper boolean conversion 
+            completed: Boolean(action.payload.completed)
+          }
+        : task
+    ),
+    loading: false
+  };
     case 'GET_TASKS':
     return {
       ...state,

@@ -15,35 +15,45 @@ const AssessmentState = props => {
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
 
   // Calculate and update compliance score based on completed tasks
-    const calculateAndUpdateComplianceScore = () => {
-    try {
-      const totalTasks = state.tasks.length;
-      if (totalTasks === 0) {
+        const calculateAndUpdateComplianceScore = () => {
+      try {
+        const totalTasks = state.tasks.length;
+        if (totalTasks === 0) {
+          dispatch({
+            type: 'UPDATE_COMPLIANCE_SCORE',
+            payload: 0
+          });
+          return 0;
+        }
+        
+        // Log each task's completion status
+        console.log('=== Task Completion Status ===');
+        state.tasks.forEach(task => {
+          console.log(`Task ${task._id.substring(0, 10)}...: completed=${Boolean(task.completed)}`);
+        });
+        
+        // Count completed tasks (using Boolean to force proper type)
+        const completedTasks = state.tasks.filter(task => Boolean(task.completed)).length;
+        
+        console.log(`Completed: ${completedTasks}/${totalTasks} tasks`);
+        
+        // Calculate percentage
+        const score = Math.round((completedTasks / totalTasks) * 100);
+        
+        console.log(`Compliance score: ${score}%`);
+        
+        // Update state with new score
         dispatch({
           type: 'UPDATE_COMPLIANCE_SCORE',
-          payload: 0
+          payload: score
         });
+        
+        return score;
+      } catch (error) {
+        console.error('Error calculating compliance score:', error);
         return 0;
       }
-      
-      // IMPORTANT: Count ONLY tasks where completed is EXACTLY true
-      const completedTasks = state.tasks.filter(task => task.completed === true).length;
-      
-      // Calculate percentage
-      const score = Math.round((completedTasks / totalTasks) * 100);
-      
-      // Update state with new score
-      dispatch({
-        type: 'UPDATE_COMPLIANCE_SCORE',
-        payload: score
-      });
-      
-      return score;
-    } catch (error) {
-      console.error('Error calculating compliance score:', error);
-      return 0;
-    }
-  };
+    };
 
   // Get current assessment
   const getAssessment = async () => {
@@ -167,8 +177,8 @@ const AssessmentState = props => {
     }
   };
 
-    // Toggle task completion - Enhanced to ensure proper task state
-        const toggleTask = async taskId => {
+        // Updated toggle task function with debug logging and fixed state handling
+    const toggleTask = async taskId => {
       try {
         // Find current task
         const currentTask = state.tasks.find(task => String(task._id) === String(taskId));
@@ -178,33 +188,56 @@ const AssessmentState = props => {
           return;
         }
         
-        // IMPORTANT: Get the ACTUAL current state from the current task
-        const currentCompleted = currentTask.completed === true;
+        // DEBUG: Log the initial state of all tasks
+        console.log('BEFORE toggle - All tasks:');
+        state.tasks.forEach(t => console.log(`Task ${t._id}: completed=${t.completed}`));
+        
+        // Get current state (explicitly as boolean)
+        const currentCompleted = Boolean(currentTask.completed);
         // Toggle it
         const newStatus = !currentCompleted;
         
-        // SKIP local optimistic update - it's causing inconsistencies
-        // Instead, just send the request first
+        console.log(`Toggle ${taskId}: ${currentCompleted} → ${newStatus}`);
+        
+        // First update locally for immediate feedback
+        dispatch({
+          type: 'UPDATE_TASK',
+          payload: { 
+            ...currentTask, 
+            completed: newStatus
+          }
+        });
+        
+        // Calculate score after local update
+        calculateAndUpdateComplianceScore();
+        
+        // Then send to server
         const res = await api.post('/assessments/tasks', {
           taskId,
           completed: newStatus
         });
     
-        // Get the ACTUAL completed status from the server response
-        const updatedTask = res.data.data;
-        const serverCompleted = updatedTask.completed === true;
+        // Extra validation to ensure boolean conversion
+        const updatedTask = {
+          ...res.data.data,
+          completed: res.data.data.completed === true
+        };
         
-        // Update state with the CORRECT server value
+        console.log(`Server returned: ${updatedTask._id} with completed=${updatedTask.completed}`);
+        
+        // Update with server response
         dispatch({
-          type: 'UPDATE_TASK',
-          payload: { 
-            ...updatedTask, 
-            completed: serverCompleted  // Ensure this is a boolean
-          }
+          type: 'UPDATE_TASK_FROM_SERVER',
+          payload: updatedTask
         });
         
-        // AFTER server update, recalculate score with the CORRECT data
-        calculateAndUpdateComplianceScore();
+        // DEBUG: Log the final state
+        setTimeout(() => {
+          console.log('AFTER server update - Current tasks:');
+          state.tasks.forEach(t => console.log(`Task ${t._id}: completed=${t.completed}`));
+          // Recalculate score after server update
+          calculateAndUpdateComplianceScore();
+        }, 0);
         
       } catch (err) {
         console.error('Error in toggleTask:', err);
