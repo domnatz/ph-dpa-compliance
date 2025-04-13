@@ -1,10 +1,9 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthContext from '../../context/auth/authContext';
 import AssessmentContext from '../../context/assessment/assessmentContext';
 import ComplianceStatus from '../../components/dashboard/ComplianceStatus';
 import TaskList from '../../components/dashboard/TaskList';
-import './dashboard.css';
 
 const Dashboard = () => {
   const authContext = useContext(AuthContext);
@@ -14,12 +13,16 @@ const Dashboard = () => {
   const { 
     assessment, 
     tasks, 
-    complianceScore, // Add this to get the compliance score
+    complianceScore, // Get the compliance score from context
     loading, 
     getAssessment, 
-    getTasks, 
-    toggleTask // Use toggleTask instead of updateTaskStatus
+    getTasks,
+    toggleTask, // Use this instead of updateTaskStatus
+    calculateAndUpdateComplianceScore
   } = assessmentContext;
+  
+  // Add state to track task updates for optimistic UI updates
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
   
   useEffect(() => {
     getAssessment();
@@ -27,21 +30,55 @@ const Dashboard = () => {
     // eslint-disable-next-line
   }, []);
   
-  // Updated to use toggleTask which handles the compliance score recalculation
+  // Enhanced toggle task function with better error handling and optimistic updates
   const handleToggleTask = async (taskId) => {
     try {
-      console.log(`Dashboard: Toggling task ${taskId}`);
+      console.log(`Dashboard: Toggling task with ID: ${taskId}`);
+      
+      // Find the current task to get its status
+      const task = tasks.find(t => t._id === taskId);
+      if (!task) {
+        console.error(`Task with ID ${taskId} not found`);
+        return;
+      }
+      
+      // Set this task as currently updating (for UI feedback if needed)
+      setUpdatingTaskId(taskId);
+      
+      // Use the context's toggleTask method which handles:
+      // 1. Finding the task
+      // 2. Toggling its completed status
+      // 3. Updating in the backend
+      // 4. Recalculating compliance score
       await toggleTask(taskId);
+      
+      console.log(`Task ${taskId} toggled successfully`);
+      
+      // Clear updating state
+      setUpdatingTaskId(null);
     } catch (error) {
       console.error('Error toggling task:', error);
+      
+      // Clear updating state in case of error
+      setUpdatingTaskId(null);
+      
+      // You could add error notification here if desired
+      // e.g., setErrorMessage('Failed to update task. Please try again.');
     }
   };
   
-  // Function to determine color based on score
-  const getScoreColor = (score) => {
-    if (score < 30) return '#dc3545'; // Red for low compliance
-    if (score < 70) return '#ffc107'; // Yellow for medium compliance
-    return '#28a745'; // Green for high compliance
+  // Function to show the compliance percentage in the UI
+  const renderCompliancePercentage = () => {
+    if (tasks && tasks.length > 0) {
+      return (
+        <div className="text-sm mb-2 text-right">
+          <span className="font-medium" style={{ color: 'var(--privacy-teal)' }}>
+            {complianceScore}% of tasks completed
+          </span>
+        </div>
+      );
+    }
+    return null;
   };
   
   if (loading) {
@@ -66,39 +103,17 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* New Compliance Progress Bar Card */}
-          <div className="lg:col-span-2 mb-4">
-            <div className="compliance-summary-card bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-bold mb-3">Your Compliance Progress</h2>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">0%</span>
-                <span className="text-sm text-gray-600">50%</span>
-                <span className="text-sm text-gray-600">100%</span>
-              </div>
-              <div className="progress-bar bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div 
-                  className="progress-fill h-full transition-all duration-500 ease-in-out"
-                  style={{ 
-                    width: `${complianceScore}%`,
-                    backgroundColor: getScoreColor(complianceScore)
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center mt-2">
-                <p className="font-semibold text-lg" style={{ color: getScoreColor(complianceScore) }}>
-                  {complianceScore}% Complete
-                </p>
-                {complianceScore < 100 && (
-                  <p className="text-sm text-gray-600">
-                    Complete all remaining tasks to achieve full compliance
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          
           <ComplianceStatus score={assessment.score} />
-          <TaskList tasks={tasks} onToggleTask={handleToggleTask} />
+          
+          {/* Add the compliance percentage above the task list */}
+          <div>
+            {renderCompliancePercentage()}
+            <TaskList 
+              tasks={tasks} 
+              onToggleTask={handleToggleTask} 
+              updatingTaskId={updatingTaskId}
+            />
+          </div>
           
           <div className="lg:col-span-2 mt-4">
             <h2 className="text-xl font-bold mb-4">Next Steps</h2>

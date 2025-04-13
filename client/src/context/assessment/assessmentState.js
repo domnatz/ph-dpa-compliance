@@ -2,7 +2,6 @@ import React, { useReducer } from 'react';
 import AssessmentContext from './assessmentContext';
 import assessmentReducer from './assessmentReducer';
 import api from '../../utils/api';
-import axios from 'axios';
 
 const AssessmentState = props => {
   const initialState = {
@@ -10,47 +9,42 @@ const AssessmentState = props => {
     tasks: [],
     loading: true,
     error: null,
-    complianceScore: 0 // Added compliance score to track progress
+    complianceScore: 0 // Added to track task completion percentage
   };
 
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
 
-  // Calculate and update compliance score
+  // Calculate and update compliance score based on completed tasks
   const calculateAndUpdateComplianceScore = () => {
     try {
-      // First get the updated tasks list
       const totalTasks = state.tasks.length;
-      if (totalTasks === 0) return;
+      if (totalTasks === 0) return 0;
       
       // Count completed tasks
       const completedTasks = state.tasks.filter(task => task.completed).length;
       
-      // Calculate the percentage (rounded to nearest whole number)
+      // Calculate percentage (rounded to nearest whole number)
       const score = Math.round((completedTasks / totalTasks) * 100);
       
-      console.log(`Compliance score updated: ${completedTasks}/${totalTasks} tasks complete (${score}%)`);
+      console.log(`Compliance score: ${completedTasks}/${totalTasks} tasks complete (${score}%)`);
       
-      // Update the score in state
+      // Update state with new score
       dispatch({
         type: 'UPDATE_COMPLIANCE_SCORE',
         payload: score
       });
       
-      // Optionally save this to the backend
-      api.post('/assessments/compliance-score', { score })
-        .then(res => console.log('Compliance score saved to server'))
-        .catch(err => console.error('Failed to save compliance score:', err));
-        
+      return score;
     } catch (error) {
       console.error('Error calculating compliance score:', error);
+      return 0;
     }
   };
 
-  // Get current assessment - FIXED PATH
+  // Get current assessment
   const getAssessment = async () => {
     try {
       console.log('Fetching assessment...');
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.get('/assessments');
       
       console.log('Assessment response:', res.data);
@@ -67,11 +61,10 @@ const AssessmentState = props => {
     }
   };
 
-  // Submit assessment - FIXED PATH
+  // Submit assessment
   const submitAssessment = async answers => {
     try {
       console.log('Submitting assessment answers:', answers);
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.post('/assessments', { answers });
 
       console.log('Assessment submission response:', res.data);
@@ -91,11 +84,10 @@ const AssessmentState = props => {
     }
   };
 
-  // Get tasks - FIXED PATH and added compliance score update
+  // Get tasks - UPDATED to calculate compliance score
   const getTasks = async () => {
     try {
       console.log('Fetching tasks...');
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.get('/assessments/tasks');
 
       console.log('Tasks fetched:', res.data.data);
@@ -116,11 +108,10 @@ const AssessmentState = props => {
     }
   };
 
-  // Generate tasks - FIXED PATH
+  // Generate tasks
   const generateTasks = async () => {
     try {
       console.log('Generating tasks...');
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.post('/assessments', { generateTasks: true });
 
       console.log('Tasks generated:', res.data.data);
@@ -141,12 +132,11 @@ const AssessmentState = props => {
     }
   };
 
-  // Update task status - FIXED PATH
+  // Update task status
   const updateTaskStatus = async (taskId, completed) => {
     try {
       console.log(`Updating task ${taskId} with completed=${completed}`);
       
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.post('/assessments/tasks', {
         taskId,
         completed
@@ -173,7 +163,7 @@ const AssessmentState = props => {
     }
   };
 
-  // Toggle task completion - FIXED PATH and updated to recalculate compliance score
+  // Toggle task completion - ENHANCED with compliance score update
   const toggleTask = async taskId => {
     try {
       console.log(`Toggle task called for ID: ${taskId}`);
@@ -191,7 +181,6 @@ const AssessmentState = props => {
       const newStatus = !currentTask.completed;
       console.log(`Toggling task ${taskId} from ${currentTask.completed} to ${newStatus}`);
       
-      // REMOVED DUPLICATE /api/ PREFIX
       const res = await api.post('/assessments/tasks', {
         taskId,
         completed: newStatus
@@ -199,12 +188,13 @@ const AssessmentState = props => {
 
       console.log('Toggle response:', res.data);
       
+      // Update the task in state
       dispatch({
         type: 'UPDATE_TASK',
         payload: res.data.data
       });
       
-      // Calculate new compliance score after task toggle
+      // Calculate new compliance score after toggling task
       calculateAndUpdateComplianceScore();
       
     } catch (err) {
@@ -227,14 +217,14 @@ const AssessmentState = props => {
         tasks: state.tasks,
         loading: state.loading,
         error: state.error,
-        complianceScore: state.complianceScore, // Added compliance score to context
+        complianceScore: state.complianceScore, // Expose the compliance score
         getAssessment,
         submitAssessment,
         generateTasks,
         getTasks,
         toggleTask,
         updateTaskStatus,
-        calculateAndUpdateComplianceScore // Added function to recalculate compliance
+        calculateAndUpdateComplianceScore // Expose this function for manual recalculation if needed
       }}
     >
       {props.children}
