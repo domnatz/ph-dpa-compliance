@@ -19,6 +19,7 @@
     "mongoose": "^7.8.6"
   },
   "devDependencies": {
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "concurrently": "^8.2.2",
     "nodemon": "^2.0.22"
   },

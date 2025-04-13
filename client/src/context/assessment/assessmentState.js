@@ -15,7 +15,7 @@ const AssessmentState = props => {
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
 
   // Calculate and update compliance score based on completed tasks
-  const calculateAndUpdateComplianceScore = () => {
+    const calculateAndUpdateComplianceScore = () => {
     try {
       const totalTasks = state.tasks.length;
       if (totalTasks === 0) {
@@ -26,23 +26,11 @@ const AssessmentState = props => {
         return 0;
       }
       
-      // Fix: Make the completed counting more explicit and reliable
-      let completedCount = 0;
-      
-      // Log each task's completion status to see what's happening
-      state.tasks.forEach(task => {
-        console.log(`Task ${task._id}: completed=${task.completed}, type=${typeof task.completed}`);
-        
-        // Only count as completed if it's exactly true (boolean true)
-        if (task.completed === true) {
-          completedCount++;
-        }
-      });
+      // IMPORTANT: Count ONLY tasks where completed is EXACTLY true
+      const completedTasks = state.tasks.filter(task => task.completed === true).length;
       
       // Calculate percentage
-      const score = Math.round((completedCount / totalTasks) * 100);
-      
-      console.log(`FIXED calculation: ${completedCount} completed out of ${totalTasks} total tasks (${score}%)`);
+      const score = Math.round((completedTasks / totalTasks) * 100);
       
       // Update state with new score
       dispatch({
@@ -180,10 +168,8 @@ const AssessmentState = props => {
   };
 
     // Toggle task completion - Enhanced to ensure proper task state
-    const toggleTask = async taskId => {
+        const toggleTask = async taskId => {
       try {
-        console.log(`Toggle task called for ID: ${taskId}`);
-        
         // Find current task
         const currentTask = state.tasks.find(task => String(task._id) === String(taskId));
         
@@ -192,53 +178,36 @@ const AssessmentState = props => {
           return;
         }
         
-        // Convert current completed status to boolean and then negate it
-        const currentStatus = currentTask.completed === true;
-        const newStatus = !currentStatus;
+        // IMPORTANT: Get the ACTUAL current state from the current task
+        const currentCompleted = currentTask.completed === true;
+        // Toggle it
+        const newStatus = !currentCompleted;
         
-        console.log(`Toggling task ${taskId} from ${currentStatus} to ${newStatus}`);
-        
-        // First update optimistically in the UI
-        dispatch({
-          type: 'UPDATE_TASK',
-          payload: { 
-            ...currentTask, 
-            completed: newStatus 
-          }
-        });
-        
-        // Calculate score after local update
-        calculateAndUpdateComplianceScore();
-        
-        // Then update on the server
+        // SKIP local optimistic update - it's causing inconsistencies
+        // Instead, just send the request first
         const res = await api.post('/assessments/tasks', {
           taskId,
           completed: newStatus
         });
     
-        // Get the response data
+        // Get the ACTUAL completed status from the server response
         const updatedTask = res.data.data;
-        
-        console.log('Server response task:', updatedTask);
-        
-        // Make sure the completed property from server is treated as boolean
         const serverCompleted = updatedTask.completed === true;
         
-        // Update state with normalized boolean value
+        // Update state with the CORRECT server value
         dispatch({
           type: 'UPDATE_TASK',
           payload: { 
             ...updatedTask, 
-            completed: serverCompleted 
+            completed: serverCompleted  // Ensure this is a boolean
           }
         });
         
-        // Recalculate score after server update
+        // AFTER server update, recalculate score with the CORRECT data
         calculateAndUpdateComplianceScore();
         
       } catch (err) {
         console.error('Error in toggleTask:', err);
-        
         dispatch({
           type: 'ASSESSMENT_ERROR',
           payload: err.response?.data?.error || 'Error updating task'

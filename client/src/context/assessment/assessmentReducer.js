@@ -32,20 +32,20 @@ export default (state, action) => {
         })) : [],
         loading: false
       };
-      case 'UPDATE_TASK':
-  return {
-    ...state,
-    tasks: state.tasks.map(task =>
-      task._id === action.payload._id 
-        ? { 
-            ...action.payload, 
-            // Ensure completed is always a boolean
-            completed: action.payload.completed === true 
-          }
-        : task
-    ),
-    loading: false
-  };
+            case 'UPDATE_TASK':
+        return {
+          ...state,
+          tasks: state.tasks.map(task => 
+            task._id === action.payload._id 
+              ? { 
+                  ...action.payload, 
+                  // IMPORTANT: Always convert to a proper boolean
+                  completed: action.payload.completed === true
+                }
+              : task
+          ),
+          loading: false
+        };
     case 'UPDATE_COMPLIANCE_SCORE':
       return {
         ...state,
