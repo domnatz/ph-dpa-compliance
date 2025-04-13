@@ -1,8 +1,8 @@
 import React, { useReducer } from 'react';
 import AssessmentContext from './assessmentContext';
 import assessmentReducer from './assessmentReducer';
-import api from '../../utils/api'; // Use this instead of direct axios calls
-import axios from 'axios'; 
+import api from '../../utils/api';
+import axios from 'axios';
 
 const AssessmentState = props => {
   const initialState = {
@@ -14,12 +14,12 @@ const AssessmentState = props => {
 
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
 
-  // Get current assessment
+  // Get current assessment - FIXED PATH
   const getAssessment = async () => {
     try {
       console.log('Fetching assessment...');
-      // Changed from axios to api
-      const res = await api.get('/api/assessments');
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.get('/assessments');
       
       console.log('Assessment response:', res.data);
       dispatch({
@@ -35,12 +35,12 @@ const AssessmentState = props => {
     }
   };
 
-  // Submit assessment
+  // Submit assessment - FIXED PATH
   const submitAssessment = async answers => {
     try {
       console.log('Submitting assessment answers:', answers);
-      // Changed from axios to api
-      const res = await api.post('/api/assessments', { answers });
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.post('/assessments', { answers });
 
       console.log('Assessment submission response:', res.data);
       dispatch({
@@ -59,12 +59,12 @@ const AssessmentState = props => {
     }
   };
 
-  // Get tasks - UPDATED to match server routes
+  // Get tasks - FIXED PATH
   const getTasks = async () => {
     try {
       console.log('Fetching tasks...');
-      // Changed from axios to api
-      const res = await api.get('/api/assessments/tasks');
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.get('/assessments/tasks');
 
       console.log('Tasks fetched:', res.data.data);
       dispatch({
@@ -80,12 +80,12 @@ const AssessmentState = props => {
     }
   };
 
-  // Generate tasks
+  // Generate tasks - FIXED PATH
   const generateTasks = async () => {
     try {
       console.log('Generating tasks...');
-      // Changed from axios to api
-      const res = await api.post('/api/assessments', { generateTasks: true });
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.post('/assessments', { generateTasks: true });
 
       console.log('Tasks generated:', res.data.data);
       dispatch({
@@ -101,13 +101,13 @@ const AssessmentState = props => {
     }
   };
 
-  // Update task status - UPDATED to match server routes
+  // Update task status - FIXED PATH
   const updateTaskStatus = async (taskId, completed) => {
     try {
       console.log(`Updating task ${taskId} with completed=${completed}`);
       
-      // Changed from axios to api
-      const res = await api.post('/api/assessments/tasks', {
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.post('/assessments/tasks', {
         taskId,
         completed
       });
@@ -129,7 +129,7 @@ const AssessmentState = props => {
     }
   };
 
-  // Toggle task completion - UPDATED to match server routes
+  // Toggle task completion - FIXED PATH
   const toggleTask = async taskId => {
     try {
       console.log(`Toggle task called for ID: ${taskId}`);
@@ -147,8 +147,8 @@ const AssessmentState = props => {
       const newStatus = !currentTask.completed;
       console.log(`Toggling task ${taskId} from ${currentTask.completed} to ${newStatus}`);
       
-      // Changed from axios to api
-      const res = await api.post('/api/assessments/tasks', {
+      // REMOVED DUPLICATE /api/ PREFIX
+      const res = await api.post('/assessments/tasks', {
         taskId,
         completed: newStatus
       });
