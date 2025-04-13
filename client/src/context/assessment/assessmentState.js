@@ -19,7 +19,6 @@ const AssessmentState = props => {
     try {
       const totalTasks = state.tasks.length;
       if (totalTasks === 0) {
-        // If no tasks, set score to 0
         dispatch({
           type: 'UPDATE_COMPLIANCE_SCORE',
           payload: 0
@@ -27,22 +26,23 @@ const AssessmentState = props => {
         return 0;
       }
       
-      // Make sure we're only counting tasks that are explicitly marked as completed
-      const completedTasks = state.tasks.filter(task => 
-        task.completed === true // Strict comparison to avoid counting null/undefined as completed
-      ).length;
+      // Fix: Make the completed counting more explicit and reliable
+      let completedCount = 0;
       
-      // Calculate percentage (rounded to nearest whole number)
-      const score = Math.round((completedTasks / totalTasks) * 100);
+      // Log each task's completion status to see what's happening
+      state.tasks.forEach(task => {
+        console.log(`Task ${task._id}: completed=${task.completed}, type=${typeof task.completed}`);
+        
+        // Only count as completed if it's exactly true (boolean true)
+        if (task.completed === true) {
+          completedCount++;
+        }
+      });
       
-      console.log(`Compliance score calculation: ${completedTasks} completed out of ${totalTasks} total tasks (${score}%)`);
+      // Calculate percentage
+      const score = Math.round((completedCount / totalTasks) * 100);
       
-      // Log tasks for debugging
-      console.log('Tasks completion status:', state.tasks.map(t => ({
-        id: t._id, 
-        completed: t.completed,
-        text: t.text.substring(0, 20) + '...'
-      })));
+      console.log(`FIXED calculation: ${completedCount} completed out of ${totalTasks} total tasks (${score}%)`);
       
       // Update state with new score
       dispatch({
@@ -180,61 +180,71 @@ const AssessmentState = props => {
   };
 
     // Toggle task completion - Enhanced to ensure proper task state
-  const toggleTask = async taskId => {
-    try {
-      console.log(`Toggle task called for ID: ${taskId}`);
-      
-      // Find current task to determine its completed status
-      const currentTask = state.tasks.find(task => String(task._id) === String(taskId));
-      
-      if (!currentTask) {
-        console.error(`Task with ID ${taskId} not found in state`);
-        console.log('Available tasks:', state.tasks);
-        return;
+    const toggleTask = async taskId => {
+      try {
+        console.log(`Toggle task called for ID: ${taskId}`);
+        
+        // Find current task
+        const currentTask = state.tasks.find(task => String(task._id) === String(taskId));
+        
+        if (!currentTask) {
+          console.error(`Task with ID ${taskId} not found in state`);
+          return;
+        }
+        
+        // Convert current completed status to boolean and then negate it
+        const currentStatus = currentTask.completed === true;
+        const newStatus = !currentStatus;
+        
+        console.log(`Toggling task ${taskId} from ${currentStatus} to ${newStatus}`);
+        
+        // First update optimistically in the UI
+        dispatch({
+          type: 'UPDATE_TASK',
+          payload: { 
+            ...currentTask, 
+            completed: newStatus 
+          }
+        });
+        
+        // Calculate score after local update
+        calculateAndUpdateComplianceScore();
+        
+        // Then update on the server
+        const res = await api.post('/assessments/tasks', {
+          taskId,
+          completed: newStatus
+        });
+    
+        // Get the response data
+        const updatedTask = res.data.data;
+        
+        console.log('Server response task:', updatedTask);
+        
+        // Make sure the completed property from server is treated as boolean
+        const serverCompleted = updatedTask.completed === true;
+        
+        // Update state with normalized boolean value
+        dispatch({
+          type: 'UPDATE_TASK',
+          payload: { 
+            ...updatedTask, 
+            completed: serverCompleted 
+          }
+        });
+        
+        // Recalculate score after server update
+        calculateAndUpdateComplianceScore();
+        
+      } catch (err) {
+        console.error('Error in toggleTask:', err);
+        
+        dispatch({
+          type: 'ASSESSMENT_ERROR',
+          payload: err.response?.data?.error || 'Error updating task'
+        });
       }
-      
-      // Toggle the completed status - ensure it's boolean
-      const newStatus = !(currentTask.completed === true);
-      console.log(`Toggling task ${taskId} from ${Boolean(currentTask.completed)} to ${newStatus}`);
-      
-      // First update the task locally for immediate UI feedback
-      dispatch({
-        type: 'UPDATE_TASK',
-        payload: { ...currentTask, completed: newStatus }
-      });
-      
-      // Calculate score immediately after local update
-      calculateAndUpdateComplianceScore();
-      
-      // Then update on the server
-      const res = await api.post('/assessments/tasks', {
-        taskId,
-        completed: newStatus
-      });
-  
-      console.log('Toggle response:', res.data);
-      
-      // Update with server response if needed
-      dispatch({
-        type: 'UPDATE_TASK',
-        payload: res.data.data
-      });
-      
-      // Recalculate score after server response
-      calculateAndUpdateComplianceScore();
-      
-    } catch (err) {
-      console.error('Error in toggleTask:', err);
-      console.error('Response:', err.response?.data);
-      console.error('Status:', err.response?.status);
-      console.error('Message:', err.message);
-      
-      dispatch({
-        type: 'ASSESSMENT_ERROR',
-        payload: err.response?.data?.error || 'Error updating task'
-      });
-    }
-  };
+    };
 
   return (
     <AssessmentContext.Provider

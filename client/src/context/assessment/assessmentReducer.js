@@ -13,27 +13,39 @@ export default (state, action) => {
         loading: false
       };
     case 'GET_TASKS':
+    return {
+      ...state,
+      // Normalize all task completed values to be boolean
+      tasks: action.payload ? action.payload.map(task => ({
+        ...task,
+        completed: task.completed === true
+      })) : [],
+      loading: false
+    };
+        case 'GENERATE_TASKS':
       return {
         ...state,
-        tasks: action.payload,
-        loading: false
-      };
-    case 'GENERATE_TASKS':
-      return {
-        ...state,
-        tasks: action.payload,
+        // Normalize task completed values for generated tasks too
+        tasks: action.payload ? action.payload.map(task => ({
+          ...task,
+          completed: task.completed === true
+        })) : [],
         loading: false
       };
       case 'UPDATE_TASK':
-        return {
-          ...state,
-          tasks: state.tasks.map(task =>
-            task._id === action.payload._id 
-              ? { ...action.payload, completed: Boolean(action.payload.completed) } // Ensure completed is boolean
-              : task
-          ),
-          loading: false
-        };
+  return {
+    ...state,
+    tasks: state.tasks.map(task =>
+      task._id === action.payload._id 
+        ? { 
+            ...action.payload, 
+            // Ensure completed is always a boolean
+            completed: action.payload.completed === true 
+          }
+        : task
+    ),
+    loading: false
+  };
     case 'UPDATE_COMPLIANCE_SCORE':
       return {
         ...state,

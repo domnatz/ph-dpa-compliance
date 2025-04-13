@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -19,10 +20,10 @@ const Footer = () => {
           
           <div className="flex flex-col md:flex-row items-center">
             <div className="flex space-x-4 mb-3 md:mb-0 md:mr-6">
-              {/* Fixed invalid href attributes */}
-              <a href="/privacy" className="!text-white hover:underline transition-colors">Privacy Policy</a>
-              <a href="/terms" className="!text-white hover:underline transition-colors">Terms</a>
-              <a href="/contact" className="!text-white hover:underline transition-colors">Contact</a>
+              {/* Changed from <a> to <Link> for proper routing */}
+              <Link to="/privacy" className="!text-white hover:underline transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="!text-white hover:underline transition-colors">Terms</Link>
+              <Link to="/contact" className="!text-white hover:underline transition-colors">Contact</Link>
             </div>
             <div className="!text-white text-sm">
               &copy; {new Date().getFullYear()} domnatz. All rights reserved.

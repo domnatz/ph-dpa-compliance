@@ -8,10 +8,13 @@ import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import Assessment from './pages/assessment/Assessment';
 import Resources from './pages/resources/Resources';
+import Privacy from './pages/privacy/Privacy';  // Import new pages
+import Terms from './pages/terms/Terms';        // Import new pages
+import Contact from './pages/contact/Contact';  // Import new pages
 import PrivateRoute from './components/routing/PrivateRoute';
 import AuthState from './context/auth/authState';
 import AssessmentState from './context/assessment/assessmentState';
-import TaskState from './context/task/taskState'; // Import TaskState
+import TaskState from './context/task/taskState';
 import AuthContext from './context/auth/authContext';
 
 const AppContent = () => {
@@ -52,6 +55,10 @@ const AppContent = () => {
               <Resources />
             </PrivateRoute>
           } />
+          {/* Add new routes - these don't need to be protected */}
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
       <Footer />
@@ -63,7 +70,7 @@ const App = () => {
   return (
     <AuthState>
       <AssessmentState>
-        <TaskState> {/* Wrap the app with TaskState */}
+        <TaskState>
           <Router>
             <AppContent />
           </Router>
